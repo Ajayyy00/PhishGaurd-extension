@@ -1,0 +1,98 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Extension build
+extension/dist/
+extension/*.zip
+
+# ML Models (large files)
+models/saved/*.pkl
+models/saved/*.joblib
+*.pt
+*.bin
+*.h5
+*.safetensors
+checkpoint-*/
+# Datasets (large files)
+datasets/raw/*.csv
+datasets/raw/*.json
+datasets/processed/*.csv
+datasets/processed/*.json
+dataset/*.csv
+dataset/*.json
+dataset/*.txt
+dataset/raw/*.csv
+dataset/raw/*.json
+dataset/processed/*.csv
+dataset/processed/*.json
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Flask
+instance/
+.webassets-cache
+
+# Secrets
+*.pem
+*.key
+secrets.json

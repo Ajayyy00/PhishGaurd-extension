@@ -1,0 +1,24 @@
+{
+  "name": "phishguard-extension",
+  "version": "1.0.0",
+  "description": "Real-Time Scam & Phishing Detection Browser Extension",
+  "private": true,
+  "scripts": {
+    "build": "echo 'No build step required for vanilla JS extension'",
+    "lint": "echo 'Add linting configuration as needed'",
+    "test": "echo 'Add testing configuration as needed'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "phishing-detection",
+    "security",
+    "browser-extension",
+    "manifest-v3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

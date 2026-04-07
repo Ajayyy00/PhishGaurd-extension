@@ -1,0 +1,14 @@
+.\.git\objects\03\dc3593a669b24a0db99c2e58319747e9d82ce4
+.\.git\objects\1d\84811edeae5a825daab63b1a1baec35e002140
+.\.git\objects\30\845733eee138d5c0a669461572f40a73d59cc6
+.\.git\objects\4a\633e5f1343fdf35e8f9988ad58d173e7f24515
+.\.git\objects\a1\f4b70879b31a73702fd44df11ad534f0d808ba
+.\.git\objects\a4\866773d20557155ff54bcbc545c85180ce5878
+.\.git\objects\d8\02bd1666ba0c65d4d60007315f48e7dfb6c7ff
+.\models\saved\nlp_phish_model\model.safetensors
+.\models\saved\nlp_phish_model\checkpoint-1000\model.safetensors
+.\models\saved\nlp_phish_model\checkpoint-1000\optimizer.pt
+.\models\saved\nlp_phish_model\checkpoint-1500\model.safetensors
+.\models\saved\nlp_phish_model\checkpoint-1500\optimizer.pt
+.\models\saved\nlp_phish_model\checkpoint-2000\model.safetensors
+.\models\saved\nlp_phish_model\checkpoint-2000\optimizer.pt

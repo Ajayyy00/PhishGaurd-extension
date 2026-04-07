@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚠️ PhishGuard Warning</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(
+          135deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f0f23 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: #fff;
+      }
+
+      .warning-container {
+        max-width: 600px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        padding: 40px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+
+      .warning-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.1);
+        }
+      }
+
+      h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+        color: #ff6b6b;
+      }
+
+      .subtitle {
+        font-size: 16px;
+        color: #a0a0a0;
+        margin-bottom: 30px;
+      }
+
+      .risk-card {
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 25px;
+      }
+
+      .risk-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 15px;
+      }
+
+      .risk-score {
+        font-size: 48px;
+        font-weight: bold;
+        color: #ff6b6b;
+      }
+
+      .risk-label {
+        font-size: 14px;
+        color: #a0a0a0;
+      }
+
+      .risk-level {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 12px;
+      }
+
+      .risk-level.critical {
+        background: #ff1744;
+      }
+      .risk-level.high {
+        background: #ff6d00;
+      }
+      .risk-level.medium {
+        background: #ffab00;
+        color: #000;
+      }
+
+      .url-display {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-all;
+        color: #ff9800;
+        margin-bottom: 20px;
+      }
+
+      .reasons {
+        text-align: left;
+        margin-bottom: 25px;
+      }
+
+      .reasons h3 {
+        font-size: 14px;
+        color: #a0a0a0;
+        margin-bottom: 10px;
+      }
+
+      .reason-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .reason-icon {
+        font-size: 18px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+      }
+
+      .btn {
+        padding: 14px 28px;
+        border: none;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-back {
+        background: linear-gradient(135deg, #00c853, #00e676);
+        color: #000;
+      }
+
+      .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0, 200, 83, 0.3);
+      }
+
+      .btn-proceed {
+        background: rgba(255, 255, 255, 0.1);
+        color: #a0a0a0;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-proceed:hover {
+        background: rgba(255, 107, 107, 0.2);
+        color: #ff6b6b;
+        border-color: #ff6b6b;
+      }
+
+      .disclaimer {
+        margin-top: 25px;
+        font-size: 12px;
+        color: #666;
+      }
+
+      .branding {
+        margin-top: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .branding-icon {
+        font-size: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="warning-container">
+      <div class="warning-icon">🛡️</div>
+      <h1>Potential Phishing Site Detected</h1>
+      <p class="subtitle">
+        PhishGuard has identified security concerns with this website
+      </p>
+
+      <div class="risk-card">
+        <div class="risk-header">
+          <div>
+            <div class="risk-score" id="riskScore">--</div>
+            <div class="risk-label">Risk Score</div>
+          </div>
+          <span class="risk-level critical" id="riskLevel">CRITICAL</span>
+        </div>
+      </div>
+
+      <div class="url-display" id="urlDisplay">Loading...</div>
+
+      <div class="reasons" id="reasonsContainer">
+        <h3>⚠️ Detected Issues</h3>
+        <div id="reasonsList">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-back" id="backBtn">← Go Back to Safety</button>
+        <button class="btn btn-proceed" id="proceedBtn">Proceed Anyway</button>
+      </div>
+
+      <p class="disclaimer">
+        If you proceed, you accept the risk. PhishGuard will continue monitoring
+        this page.
+      </p>
+
+      <div class="branding">
+        <span class="branding-icon">🛡️</span>
+        <span>Protected by PhishGuard</span>
+      </div>
+    </div>
+
+    <script src="warning.js"></script>
+  </body>
+</html>

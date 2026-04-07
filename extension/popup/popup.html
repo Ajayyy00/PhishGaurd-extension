@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PhishGuard</title>
+    <link rel="stylesheet" href="popup.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app-container">
+      <!-- Header -->
+      <header class="header">
+        <div class="brand">
+          <span class="logo-icon">🛡️</span>
+          <h1>PhishGuard</h1>
+        </div>
+        <div class="status-badge" id="connection-status">
+          <span class="dot"></span> Connected
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main>
+        <!-- Site Info -->
+        <div class="site-info">
+          <img
+            id="favicon"
+            src=""
+            alt=""
+            class="favicon"
+            onerror="this.style.display = 'none'"
+          />
+          <div class="url-text">
+            <span id="domain" class="domain">analyzing...</span>
+            <!-- <span id="path" class="path">/</span> -->
+          </div>
+        </div>
+
+        <!-- Risk Gauge Section -->
+        <section class="risk-section">
+          <div class="gauge-container">
+            <svg class="gauge" viewBox="0 0 200 100">
+              <!-- Background Arc -->
+              <path
+                class="gauge-bg"
+                d="M20 100 A 80 80 0 0 1 180 100"
+                fill="none"
+                stroke="#334155"
+                stroke-width="20"
+                stroke-linecap="round"
+              />
+              <!-- Value Arc -->
+              <path
+                id="gauge-arc"
+                class="gauge-val"
+                d="M20 100 A 80 80 0 0 1 180 100"
+                fill="none"
+                stroke="#22c55e"
+                stroke-width="20"
+                stroke-linecap="round"
+                stroke-dasharray="251.2"
+                stroke-dashoffset="251.2"
+              />
+            </svg>
+            <div class="score-display">
+              <span id="risk-score" class="score-val">--</span>
+              <span class="score-max">/100</span>
+            </div>
+          </div>
+          <div class="risk-badge-container">
+            <span id="risk-badge" class="risk-badge safe">Analyzing</span>
+          </div>
+        </section>
+
+        <!-- Breakdown Cards -->
+        <section class="breakdown-grid">
+          <div class="card" id="card-url">
+            <div class="card-header">
+              <span class="icon">🔗</span>
+              <span class="label">URL</span>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" id="bar-url" style="width: 0%"></div>
+            </div>
+            <span class="card-score" id="score-url">0%</span>
+          </div>
+          <div class="card" id="card-nlp">
+            <div class="card-header">
+              <span class="icon">📝</span>
+              <span class="label">Content</span>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" id="bar-nlp" style="width: 0%"></div>
+            </div>
+            <span class="card-score" id="score-nlp">0%</span>
+          </div>
+          <div class="card" id="card-dom">
+            <div class="card-header">
+              <span class="icon">🏗️</span>
+              <span class="label">Structure</span>
+            </div>
+            <div class="progress-bar">
+              <div class="fill" id="bar-dom" style="width: 0%"></div>
+            </div>
+            <span class="card-score" id="score-dom">0%</span>
+          </div>
+        </section>
+
+        <!-- Explanations / Why Flagged -->
+        <section class="details-section">
+          <button id="toggle-details" class="toggle-btn">
+            <span>Why flagged?</span>
+            <span class="chevron">▼</span>
+          </button>
+          <div id="explanations-list" class="explanations hidden">
+            <!-- Dynamic Items -->
+            <div class="empty-state">No specific flags detected.</div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer Actions -->
+      <footer class="footer">
+        <div class="actions">
+          <button id="rescan-btn" class="action-btn">
+            <span>🔄</span> Rescan
+          </button>
+          <div class="setting-toggle">
+            <label class="switch">
+              <input type="checkbox" id="nlp-toggle" />
+              <span class="slider round"></span>
+            </label>
+            <span class="setting-label">Highlights</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <script src="popup.js"></script>
+  </body>
+</html>
