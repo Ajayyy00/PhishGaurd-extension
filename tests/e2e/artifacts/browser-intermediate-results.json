@@ -1,0 +1,566 @@
+{
+  "checks": [
+    {
+      "name": "Real extension service worker, options pairing and authenticated backend",
+      "status": "VERIFIED",
+      "ms": 558,
+      "detail": {
+        "serviceWorker": "chrome-extension://mihecjaodbnkcoooajmdniinndogined/background/background.js",
+        "status": {
+          "nlp": "loaded",
+          "url": "loaded"
+        }
+      }
+    },
+    {
+      "name": "Benign local fixture through existing trusted-domain policy: URL then full analysis",
+      "status": "VERIFIED",
+      "ms": 936,
+      "detail": {
+        "url": "http://fixture.github.com:8765/benign",
+        "timestamp": 1791646477132,
+        "riskScore": 8,
+        "finalScore": 8,
+        "riskLevel": "safe",
+        "isPhishing": false,
+        "shouldBlock": false,
+        "confidence": null,
+        "features": {
+          "hostname": "fixture.github.com",
+          "protocol": "http:",
+          "riskFactors": [
+            "insecure_http"
+          ],
+          "safeFactors": [
+            "known_safe_domain"
+          ]
+        },
+        "explanations": [
+          {
+            "category": "url",
+            "message": "Site uses insecure HTTP connection",
+            "type": "warning"
+          },
+          {
+            "category": "url",
+            "message": "This is a known trusted domain",
+            "type": "safe"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Community Library...' (+0.99)",
+            "type": "danger"
+          }
+        ],
+        "explanation": "Site uses insecure HTTP connection",
+        "urlRisk": 25,
+        "nlpRisk": 2,
+        "domRisk": 0,
+        "analysisStage": "full",
+        "detectors": {
+          "dom": {
+            "source": "similarity",
+            "status": "ok"
+          },
+          "nlp": {
+            "source": "model",
+            "status": "ok"
+          },
+          "url": {
+            "source": "model",
+            "status": "ok"
+          }
+        },
+        "degraded": false,
+        "errors": [],
+        "suspicious_phrases": [],
+        "apiResponse": true
+      }
+    },
+    {
+      "name": "Benign localhost false-positive measurement",
+      "status": "VERIFIED",
+      "ms": 33560,
+      "detail": {
+        "url": "http://localhost:8765/benign",
+        "score": "100",
+        "outcome": "FALSE POSITIVE: trained model blocks benign local hostname"
+      }
+    },
+    {
+      "name": "Dangerous URL redirects to warning with real model reasons and Go Back",
+      "status": "VERIFIED",
+      "ms": 1214
+    },
+    {
+      "name": "Proceed Anyway, bypass and real MiniLM/DOM full phishing analysis",
+      "status": "VERIFIED",
+      "ms": 3007,
+      "detail": {
+        "url": "http://verify-paypal-account.xyz:8765/login",
+        "timestamp": 1791646513490,
+        "riskScore": 90,
+        "finalScore": 90,
+        "riskLevel": "dangerous",
+        "isPhishing": true,
+        "shouldBlock": true,
+        "confidence": null,
+        "features": {
+          "hostname": "verify-paypal-account.xyz",
+          "protocol": "http:",
+          "riskFactors": [
+            "insecure_http",
+            "suspicious_tld"
+          ],
+          "safeFactors": []
+        },
+        "explanations": [
+          {
+            "category": "url",
+            "message": "Site uses insecure HTTP connection",
+            "type": "warning"
+          },
+          {
+            "category": "url",
+            "message": "Uses high-risk domain extension (.xyz)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "URL model and URL indicators produced risk score 100/100",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Confirm your identity...' (+1.00)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Dummy email...' (+1.00)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Dummy password...' (+1.00)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP Model: Suspicious context: 'Demonstration only...' (+0.99)",
+            "type": "danger"
+          },
+          {
+            "category": "content",
+            "message": "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+            "type": "warning"
+          },
+          {
+            "category": "content",
+            "message": "Page requests sensitive info: password",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "NLP model and text indicators produced risk score 76/100",
+            "type": "danger"
+          },
+          {
+            "category": "dom",
+            "message": "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+            "type": "danger"
+          },
+          {
+            "category": "dom",
+            "message": "Login form detected on suspicious domain",
+            "type": "warning"
+          },
+          {
+            "category": "ml",
+            "message": "ML Model: Deep URL path structure (+3.71)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "ML Model: Many path segments (+1.69)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "ML Model: Long query string (+0.71)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "ML Model: High ratio of special characters (+0.42)",
+            "type": "danger"
+          },
+          {
+            "category": "ml",
+            "message": "ML Model: Deep URL path (+0.37)",
+            "type": "danger"
+          }
+        ],
+        "explanation": "Site uses insecure HTTP connection",
+        "urlRisk": 100,
+        "nlpRisk": 76,
+        "domRisk": 93,
+        "analysisStage": "full",
+        "detectors": {
+          "dom": {
+            "source": "similarity",
+            "status": "ok"
+          },
+          "nlp": {
+            "source": "model",
+            "status": "ok"
+          },
+          "url": {
+            "source": "model",
+            "status": "ok"
+          }
+        },
+        "degraded": false,
+        "errors": [],
+        "suspicious_phrases": [
+          "urgent",
+          "immediately",
+          "within 24 hours",
+          "verify your account",
+          "confirm your identity"
+        ],
+        "apiResponse": true
+      }
+    },
+    {
+      "name": "Popup dashboard, full score/bars, rescan, toggle and reopen",
+      "status": "FAILED",
+      "ms": 26288,
+      "error": "locator.uncheck: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('#nlp-toggle')\u001b[22m\n\u001b[2m    - locator resolved to <input type=\"checkbox\" id=\"nlp-toggle\"/>\u001b[22m\n\u001b[2m  - attempting click action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    4 × waiting for element to be visible, enabled and stable\u001b[22m\n\u001b[2m      - element is not visible\u001b[22m\n\u001b[2m    - retrying click action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n\u001b[2m    - waiting for element to be visible, enabled and stable\u001b[22m\n\n    at D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:156:40\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:149:3"
+    },
+    {
+      "name": "Dynamic text, highlighting without nesting, observer settles and interactions",
+      "status": "VERIFIED",
+      "ms": 3337
+    },
+    {
+      "name": "XSS regression: warning parameters, popup explanations and restricted target",
+      "status": "FAILED",
+      "ms": 5518,
+      "error": "AssertionError [ERR_ASSERTION]: false == true\n    at D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:176:75\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:170:3"
+    },
+    {
+      "name": "Multiple tabs, rapid navigation, redirect and reload discard stale results",
+      "status": "VERIFIED",
+      "ms": 33402
+    },
+    {
+      "name": "Empty/long page, encoded special characters and overlong URL rejection",
+      "status": "VERIFIED",
+      "ms": 1682
+    },
+    {
+      "name": "Malformed API response and real network timeout visibly degrade and recover",
+      "status": "VERIFIED",
+      "ms": 8407
+    },
+    {
+      "name": "Stopped Flask: safe/suspicious navigation fallback and restart recovery",
+      "status": "VERIFIED",
+      "ms": 72939
+    },
+    {
+      "name": "Service-worker stop/restart retains pairing and session bypass",
+      "status": "VERIFIED",
+      "ms": 445
+    },
+    {
+      "name": "Browser restart retains connection settings and clears temporary bypass",
+      "status": "VERIFIED",
+      "ms": 2105
+    },
+    {
+      "name": "Ordinary public website (non-gating availability check)",
+      "status": "VERIFIED",
+      "ms": 872
+    },
+    {
+      "name": "No uncaught page or worker JavaScript exceptions",
+      "status": "FAILED",
+      "ms": 5,
+      "error": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n\n+ [\n+   '[PhishGuard] Message error: Error: Unsupported URL'\n+ ]\n- []\n\n    at D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:234:123\n    at check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:28)\n    at D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:234:9"
+    }
+  ],
+  "observations": [
+    {
+      "url": "http://localhost:8765/benign",
+      "score": "100",
+      "outcome": "FALSE POSITIVE: trained model blocks benign local hostname"
+    },
+    {
+      "publicWebsite": "https://www.wikipedia.org/",
+      "stage": "url_only",
+      "degraded": false
+    }
+  ],
+  "pageErrors": [],
+  "workerErrors": [
+    "[PhishGuard] Message error: Error: Unsupported URL"
+  ],
+  "console": [
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] URL was bypassed, allowing"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Highlighted 2 suspicious text areas"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] URL was bypassed, allowing"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Highlighted 2 suspicious text areas"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Highlighted 1 suspicious text areas"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Highlighted 2 suspicious text areas"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    }
+  ],
+  "requests": [
+    {
+      "path": "/api/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/status",
+      "status": 200,
+      "method": "GET"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    },
+    {
+      "path": "/api/analyze",
+      "status": 200,
+      "method": "POST"
+    }
+  ],
+  "browser": {
+    "executable": "chrome.exe",
+    "version": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/134.0.0.0 Safari/537.36",
+    "mode": "headless persistent MV3",
+    "extensionOrigin": "chrome-extension://mihecjaodbnkcoooajmdniinndogined",
+    "profile": "temporary isolated profile outside repository"
+  },
+  "popupTargets": [
+    {
+      "type": "page",
+      "url": "chrome-extension://mihecjaodbnkcoooajmdniinndogined/popup/popup.html"
+    }
+  ],
+  "popupMode": "Real popup document in inactive extension tab; toolbar popup target not exposed by headless Playwright",
+  "finishedAt": "2026-10-10T15:37:51.382Z"
+}

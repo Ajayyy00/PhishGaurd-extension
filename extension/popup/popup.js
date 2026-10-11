@@ -28,6 +28,8 @@ const elements = {
 };
 
 // Constants
+let refreshInProgress = false;
+let rescanPending = false;
 const GAUGE_CIRCUMFERENCE = 251.2; // pi * 80
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -35,9 +37,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 async function init() {
+  elements.favicon.addEventListener("error", () => { elements.favicon.style.display = "none"; });
+  document.getElementById("connection-settings").addEventListener("click", () => chrome.runtime.openOptionsPage());
   setupEventListeners();
   await loadAnalysis();
   loadSettings();
+  setInterval(() => loadAnalysis(), 2000);
 }
 
 function setupEventListeners() {
@@ -78,58 +83,75 @@ function setupEventListeners() {
 }
 
 async function loadAnalysis(forceRefresh = false) {
+  if (refreshInProgress) { if (forceRefresh) rescanPending = true; return; }
+  refreshInProgress = true;
   try {
     const [tab] = await chrome.tabs.query({
       active: true,
       currentWindow: true,
     });
 
-    if (!tab?.url || tab.url.startsWith("chrome://")) {
+    if (!tab?.url || !PhishGuardRisk.httpUrl(tab.url)) {
       renderSystemPage();
       return;
     }
 
     const url = new URL(tab.url);
-    elements.domain.textContent = url.hostname;
-    elements.favicon.src = `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=64`;
+    elements.domain.textContent = tab.url;
+    elements.domain.title = tab.url;
+    elements.favicon.src = "../assets/icons/icon48.png";
     elements.favicon.style.display = "block";
 
     // Check cache first if not forced
     if (!forceRefresh) {
       const cached = await chrome.runtime.sendMessage({
         type: "GET_CURRENT_ANALYSIS",
+        tabId: tab.id,
       });
       if (cached && cached.url === tab.url) {
-        renderAnalysis(cached);
+        await renderForTab(tab, cached);
         return;
       }
     }
 
+    // Rescan uses current visible text and DOM; restricted pages fall back to URL-only.
+    try {
+      const pageResult = await chrome.tabs.sendMessage(tab.id, {type: "RESCAN_PAGE", forceRefresh});
+      if (pageResult && !pageResult.error && pageResult.url === tab.url) {
+        await renderForTab(tab, pageResult);
+        return;
+      }
+    } catch {}
     // Request Analysis
     const analysis = await chrome.runtime.sendMessage({
       type: "ANALYZE_URL",
       url: tab.url,
+      forceRefresh,
     });
 
     if (analysis.error) throw new Error(analysis.error);
-    renderAnalysis(analysis);
+    await renderForTab(tab, analysis);
   } catch (error) {
     console.error("Analysis failed:", error);
     renderError(error.message);
+  } finally {
+    refreshInProgress = false;
+    if (rescanPending) { rescanPending = false; loadAnalysis(true); }
   }
 }
 
-function renderAnalysis(data) {
-  // Update Connection Status
-  if (data.apiResponse === false) {
-    elements.connectionStatus.innerHTML =
-      '<span class="dot" style="background-color: var(--warning); box-shadow: 0 0 8px var(--warning)"></span> Offline Mode';
-  } else {
-    elements.connectionStatus.innerHTML = '<span class="dot"></span> Connected';
-  }
+async function renderForTab(tab, data) {
+  const [current] = await chrome.tabs.query({active: true, currentWindow: true});
+  if (current?.id === tab.id && current?.url === data.url) renderAnalysis(data);
+}
 
+function renderAnalysis(data) {
+  elements.domain.textContent = data.url || "Unknown URL";
+  elements.connectionStatus.textContent = data.degraded ? "Reduced protection" : "Connected";
+  document.getElementById("analysis-status").textContent = `${data.analysisStage || "Pending"}${data.degraded ? " · URL fallback or incomplete detection" : ""}`;
   // 1. Risk Gauge
-  const score = data.finalScore ?? data.riskScore ?? 0;
+  const score = data.finalScore ?? data.riskScore;
+  if (!PhishGuardRisk.validScore(score)) { renderError("Analysis unavailable"); return; }
   const offset = GAUGE_CIRCUMFERENCE - (score / 100) * GAUGE_CIRCUMFERENCE;
 
   elements.riskScore.textContent = score;
@@ -137,35 +159,34 @@ function renderAnalysis(data) {
 
   // Color based on score
   let color = "#22c55e"; // Green
-  if (score >= 70)
+  if (score > 70)
     color = "#ef4444"; // Red
-  else if (score >= 30) color = "#f59e0b"; // Orange
+  else if (score > 30) color = "#f59e0b"; // Orange
 
   elements.gaugeArc.style.stroke = color;
 
   // 2. Risk Badge
-  const level =
-    data.riskLevel ||
-    (score >= 70 ? "dangerous" : score >= 30 ? "suspicious" : "safe");
+  const level = PhishGuardRisk.level(score, data.degraded);
   elements.riskBadge.className = `risk-badge ${level}`;
   elements.riskBadge.textContent = level.toUpperCase();
 
   // 3. Breakdown
-  updateBar(elements.barUrl, elements.scoreUrl, data.urlRisk ?? 0);
-  updateBar(elements.barNlp, elements.scoreNlp, data.nlpRisk ?? 0);
-  updateBar(elements.barDom, elements.scoreDom, data.domRisk ?? 0);
+  updateBar(elements.barUrl, elements.scoreUrl, data.urlRisk);
+  updateBar(elements.barNlp, elements.scoreNlp, data.nlpRisk);
+  updateBar(elements.barDom, elements.scoreDom, data.domRisk);
 
   // 4. Explanations
-  renderExplanations(data.explanations || []);
+  renderExplanations(data.degraded ? [{type: "warning", category: "system", message: data.explanation || "Detection is incomplete"}, ...(data.explanations || [])] : data.explanations || []);
 }
 
 function updateBar(barEl, scoreEl, score) {
+  if (!PhishGuardRisk.validScore(score)) { barEl.style.width = "0%"; scoreEl.textContent = "Unavailable"; return; }
   barEl.style.width = `${score}%`;
   scoreEl.textContent = `${score}%`;
 
   let color = "#22c55e";
-  if (score >= 70) color = "#ef4444";
-  else if (score >= 30) color = "#f59e0b";
+  if (score > 70) color = "#ef4444";
+  else if (score > 30) color = "#f59e0b";
 
   barEl.style.backgroundColor = color;
 }
@@ -194,25 +215,37 @@ function renderExplanations(list) {
     else if (item.category === "url") badgeClass = "badge-url";
     else if (item.category === "content") badgeClass = "badge-content";
 
-    el.innerHTML = `
-            <span class="exp-icon">${icon}</span>
-            <span class="exp-text">${item.message}</span>
-            ${badgeClass ? `<span class="exp-badge ${badgeClass}">${item.category}</span>` : ""}
-        `;
+    const iconEl = document.createElement("span");
+    iconEl.className = "exp-icon";
+    iconEl.textContent = icon;
+    const textEl = document.createElement("span");
+    textEl.className = "exp-text";
+    textEl.textContent = String(item.message || "");
+    el.append(iconEl, textEl);
+    if (badgeClass) {
+      const badge = document.createElement("span");
+      badge.className = `exp-badge ${badgeClass}`;
+      badge.textContent = item.category;
+      el.appendChild(badge);
+    }
     elements.explanationsList.appendChild(el);
   });
 }
 
 function renderSystemPage() {
   elements.domain.textContent = "System Page";
-  elements.riskScore.textContent = "0";
+  elements.riskScore.textContent = "--";
   elements.gaugeArc.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
   elements.riskBadge.className = "risk-badge safe";
-  elements.riskBadge.textContent = "SAFE";
+  elements.riskBadge.textContent = "NOT ANALYZED";
+  document.getElementById("analysis-status").textContent = "Browser page; analysis unavailable";
+  [elements.scoreUrl, elements.scoreNlp, elements.scoreDom].forEach(el => { el.textContent = "--"; });
   renderExplanations([]);
 }
 
 function renderError(msg) {
+  elements.riskScore.textContent = "--";
+  [[elements.barUrl,elements.scoreUrl],[elements.barNlp,elements.scoreNlp],[elements.barDom,elements.scoreDom]].forEach(([bar,label]) => updateBar(bar,label,null));
   elements.domain.textContent = "Error";
   elements.riskBadge.className = "risk-badge warning";
   elements.riskBadge.textContent = "ERROR";

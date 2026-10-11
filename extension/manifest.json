@@ -2,6 +2,8 @@
   "manifest_version": 3,
   "name": "PhishGuard",
   "version": "1.0.0",
+  "minimum_chrome_version": "114",
+  "options_page": "options/options.html",
   "description": "Real-Time Scam & Phishing Detection Browser Extension",
 
   "permissions": ["activeTab", "tabs", "storage", "webNavigation", "scripting"],
@@ -25,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content/content.js"],
+      "js": ["shared/risk.js", "content/content.js"],
       "css": ["content/content.css"],
       "run_at": "document_start",
       "all_frames": false
@@ -40,7 +42,7 @@
 
   "web_accessible_resources": [
     {
-      "resources": ["assets/*", "warning/*"],
+      "resources": ["assets/*"],
       "matches": ["<all_urls>"]
     }
   ]

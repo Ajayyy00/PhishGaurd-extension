@@ -37,7 +37,7 @@ onDocumentReady(async () => {
     return;
   }
 
-  console.log("[PhishGuard] Content script loaded:", window.location.href);
+
 
   // Check if this URL was already bypassed
   try {
@@ -46,7 +46,10 @@ onDocumentReady(async () => {
       url: window.location.href,
     });
 
+    if (bypassResult?.enabled === false) return;
     if (bypassResult && bypassResult.bypassed) {
+      if (document.readyState === "complete") performFullAnalysis();
+      else window.addEventListener("load", () => performFullAnalysis(), {once: true});
       console.log("[PhishGuard] URL was bypassed, allowing");
       return;
     }
@@ -64,26 +67,28 @@ onDocumentReady(async () => {
       url: window.location.href,
     });
 
-    console.log("[PhishGuard] Analysis result:", analysis);
+    if (analysis?.error) throw new Error(analysis.error);
 
-    if (analysis && analysis.riskScore >= BLOCK_THRESHOLD) {
+    if (analysis && analysis.shouldBlock) {
       // High risk - show warning
       showWarningOverlay(analysis);
     } else {
       // Safe - remove overlay and show safe badge
       removeOverlay();
-      showSafeBadge();
+      if (analysis.riskLevel === "safe" && !analysis.degraded) showSafeBadge(analysis.analysisStage);
+      else showRiskIndicator(analysis);
 
       // Continue with full page analysis after page loads
       if (document.readyState === "complete") {
         performFullAnalysis();
       } else {
-        window.addEventListener("load", performFullAnalysis, { once: true });
+        window.addEventListener("load", () => performFullAnalysis(), { once: true });
       }
     }
   } catch (error) {
     console.error("[PhishGuard] Analysis error:", error);
-    removeOverlay(); // On error, allow access
+    removeOverlay();
+    showRiskIndicator({degraded: true});
   }
 });
 
@@ -146,22 +151,24 @@ function showWarningOverlay(analysis) {
     target.appendChild(overlay);
   }
 
-  const riskLevel = analysis.riskLevel || "high";
-  const riskScore = analysis.riskScore || 0;
+  const rawScore = analysis.finalScore > 70 ? analysis.finalScore : analysis.urlRisk;
+  const riskScore = PhishGuardRisk.validScore(rawScore) ? rawScore : 0;
+  const riskLevel = PhishGuardRisk.level(riskScore, analysis.degraded);
   const explanations = analysis.explanations || [];
 
   // Build reasons list
   let reasonsHtml = "";
+  if (analysis.degraded) reasonsHtml = `<p>${PhishGuardRisk.escapeHtml(analysis.explanation || 'Reduced protection: URL heuristics only')}</p>`;
   if (explanations.length > 0) {
     explanations.forEach((exp) => {
       if (exp.type === "danger" || exp.type === "warning") {
-        reasonsHtml += `<div style="padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #ffab00;">⚠️ ${exp.message}</div>`;
+        reasonsHtml += `<div style="padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #ffab00;">⚠️ ${PhishGuardRisk.escapeHtml(exp.message)}</div>`;
       }
     });
   }
   if (!reasonsHtml) {
     reasonsHtml =
-      '<div style="padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #ffab00;">⚠️ High-risk URL detected by ML analysis</div>';
+      '<div style="padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 8px; font-size: 13px; color: #ffab00;">⚠️ URL protection threshold exceeded</div>';
   }
 
   // Apply container styles
@@ -195,7 +202,7 @@ function showWarningOverlay(analysis) {
         <span style="padding: 8px 16px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 12px; background: #ff1744; color: #fff;">${riskLevel.toUpperCase()}</span>
       </div>
       
-      <div style="background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #ff9800; margin-bottom: 20px;">${window.location.href}</div>
+      <div style="background: rgba(0, 0, 0, 0.3); border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; word-break: break-all; color: #ff9800; margin-bottom: 20px;">${PhishGuardRisk.escapeHtml(window.location.href)}</div>
       
       <div style="text-align: left; margin-bottom: 25px;">
         <h3 style="font-size: 12px; color: #a0a0a0; margin-bottom: 10px; text-transform: uppercase;">⚠️ Detected Issues</h3>
@@ -213,32 +220,31 @@ function showWarningOverlay(analysis) {
 
   // Attach event listeners using setTimeout to ensure DOM is ready
   setTimeout(() => {
-    const backBtn = document.getElementById("phishguard-back-btn");
-    const proceedBtn = document.getElementById("phishguard-proceed-btn");
+    const backBtn = overlay.querySelector("#phishguard-back-btn");
+    const proceedBtn = overlay.querySelector("#phishguard-proceed-btn");
 
     if (backBtn) {
-      backBtn.onclick = function () {
+      backBtn.onclick = function (event) {
+        if (!event.isTrusted) return;
         console.log("[PhishGuard] Back button clicked");
-        if (window.history.length > 1) {
-          window.history.back();
-        } else {
-          window.location.href = "https://www.google.com";
-        }
+        window.location.replace("about:blank");
       };
     }
 
     if (proceedBtn) {
-      proceedBtn.onclick = async function () {
+      proceedBtn.onclick = async function (event) {
+        // A visited page can call DOM .click(); it must not grant itself a bypass.
+        if (!event.isTrusted) return;
         console.log("[PhishGuard] Proceed button clicked");
         try {
-          await chrome.runtime.sendMessage({
-            type: "BYPASS_WARNING",
-            url: window.location.href,
-          });
+          const response = await chrome.runtime.sendMessage({type: "BYPASS_WARNING", url: window.location.href});
+          if (!response?.success) throw new Error("Bypass was not accepted");
         } catch (e) {
-          console.log("[PhishGuard] Could not send bypass message");
+          console.warn("[PhishGuard] Bypass failed");
+          return;
         }
         removeOverlay();
+        performFullAnalysis();
       };
     }
   }, 50);
@@ -251,9 +257,7 @@ function showWarningOverlay(analysis) {
 function removeOverlay() {
   const overlay = document.getElementById("phishguard-overlay");
   if (overlay) {
-    overlay.style.transition = "opacity 0.3s ease";
-    overlay.style.opacity = "0";
-    setTimeout(() => overlay.remove(), 300);
+    overlay.remove();
   }
 }
 
@@ -261,7 +265,7 @@ function removeOverlay() {
 // Full Page Analysis (after page loads)
 // ============================================================================
 
-async function performFullAnalysis() {
+async function performFullAnalysis(forceRefresh = false) {
   // Extract page data
   const pageData = extractPageData();
 
@@ -270,37 +274,42 @@ async function performFullAnalysis() {
     const result = await chrome.runtime.sendMessage({
       type: "ANALYZE_PAGE_DATA",
       data: pageData,
+      forceRefresh,
     });
 
-    console.log("[PhishGuard] Full analysis result:", result);
+    if (pageData.url !== window.location.href) return {error: "Page changed"};
+    if (result?.error) return result;
 
     // If NLP analysis reveals high risk, show indicator
     if (result && result.nlpRisk > 30) {
       showRiskIndicator(result);
     }
+    return result;
   } catch (error) {
-    console.error("[PhishGuard] Full analysis error:", error);
+    console.warn("[PhishGuard] Full analysis unavailable");
+    return {error: error.message};
   }
 }
 
 function extractPageData() {
-  return {
-    url: window.location.href,
-    visibleText: document.body?.innerText?.substring(0, 10000) || "",
-    domFingerprint: {
-      stats: {
-        forms: document.querySelectorAll("form").length,
-        inputs: document.querySelectorAll("input").length,
-        links: document.querySelectorAll("a").length,
-        scripts: document.querySelectorAll("script").length,
-        iframes: document.querySelectorAll("iframe").length,
-      },
-    },
-  };
+  // Exclude our UI; never collect credential values.
+  const ui = [...document.querySelectorAll('[id^="phishguard-"]')].filter(el => !el.id.includes('styles'));
+  const displays = ui.map(el => el.style.display);
+  ui.forEach(el => { el.style.display = "none"; });
+  const visibleText = document.body?.innerText?.slice(0, 10000) || "";
+  ui.forEach((el, index) => { el.style.display = displays[index]; });
+  const inputs = [...document.querySelectorAll("input")].slice(0,100).map(input => ({type: input.type, name: input.name.slice(0,256), id: input.id.slice(0,256)}));
+  const forms = [...document.querySelectorAll("form")].slice(0,100).map(form => ({action: form.action.slice(0,2048)}));
+  return {url: window.location.href, visibleText, domFingerprint: {
+    stats: Object.fromEntries([['forms','form'],['inputs','input'],['links','a'],['scripts','script'],['iframes','iframe']]
+      .map(([name, tag]) => [name, Math.min(document.querySelectorAll(tag).length,100000)])),
+    inputs, forms, title: document.title.slice(0,1000), visibleText: visibleText.slice(0,4000),
+  }};
 }
 
 function showRiskIndicator(analysis) {
-  if (document.getElementById("phishguard-indicator")) return;
+  document.getElementById("phishguard-safe-badge")?.remove();
+  document.getElementById("phishguard-indicator")?.remove();
 
   const indicator = document.createElement("div");
   indicator.id = "phishguard-indicator";
@@ -321,7 +330,7 @@ function showRiskIndicator(analysis) {
     cursor: "pointer",
   });
 
-  indicator.textContent = "⚠️ PhishGuard: Suspicious content detected";
+  indicator.textContent = analysis?.degraded ? "⚠️ PhishGuard: Reduced protection — open the popup for details" : "⚠️ PhishGuard: Suspicious content detected";
 
   indicator.onclick = () => indicator.remove();
 
@@ -337,7 +346,8 @@ function showRiskIndicator(analysis) {
 // Safe Badge (shown for safe sites)
 // ============================================================================
 
-function showSafeBadge() {
+function showSafeBadge(stage = "full") {
+  document.getElementById("phishguard-indicator")?.remove();
   if (document.getElementById("phishguard-safe-badge")) return;
 
   const badge = document.createElement("div");
@@ -365,7 +375,7 @@ function showSafeBadge() {
 
   badge.innerHTML = `
     <span style="font-size: 16px;">🛡️</span>
-    <span>PhishGuard: <strong>Safe</strong></span>
+    <span>PhishGuard: <strong>${stage === "url_only" ? "URL checked; page analysis pending" : "Safe"}</strong></span>
   `;
 
   badge.onmouseenter = () => {
@@ -397,15 +407,18 @@ function showSafeBadge() {
 // ============================================================================
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "ANALYSIS_RESULT") {
-    console.log("[PhishGuard] Received analysis result:", message.data);
-
-    // Highlight suspicious phrases if found
-    if (message.data && message.data.suspicious_phrases) {
-      highlightSuspiciousPhrases(message.data.suspicious_phrases);
-    }
+  if (sender.id !== chrome.runtime.id) return false;
+  if (message.type === "RESCAN_PAGE") {
+    performFullAnalysis(message.forceRefresh === true).then(sendResponse).catch(error => sendResponse({error: error.message}));
+    return true;
   }
-  return true;
+  if (message.type === "ANALYSIS_RESULT" && message.data?.url === window.location.href) {
+    if (highlightingEnabled) highlightSuspiciousPhrases(message.data.suspicious_phrases);
+    if (message.data.degraded) showRiskIndicator(message.data);
+    else if (message.data.riskLevel === 'safe') showSafeBadge(message.data.analysisStage);
+    else showRiskIndicator(message.data);
+  }
+  return false;
 });
 
 // ============================================================================
@@ -500,7 +513,7 @@ function scanAndHighlightPage() {
 
     // Check for suspicious phrases
     SUSPICIOUS_PHRASES.forEach((phrase) => {
-      if (text.includes(phrase)) {
+      if (node.isConnected && text.includes(phrase)) {
         highlightTextInNode(
           node,
           phrase,
@@ -513,7 +526,7 @@ function scanAndHighlightPage() {
 
     // Check for form keywords (more severe)
     FORM_KEYWORDS.forEach((keyword) => {
-      if (text.includes(keyword)) {
+      if (node.isConnected && text.includes(keyword)) {
         highlightTextInNode(
           node,
           keyword,
@@ -542,7 +555,8 @@ function getTextNodes(element) {
     acceptNode: function (node) {
       // Skip script, style, and already processed nodes
       const parent = node.parentElement;
-      if (!parent) return NodeFilter.FILTER_REJECT;
+      if (!parent || parent.closest('[id^="phishguard-"], [data-phishguard-mark], input, textarea, button, [contenteditable="true"]')) return NodeFilter.FILTER_REJECT;
+      if (!parent.getClientRects().length || getComputedStyle(parent).visibility === "hidden") return NodeFilter.FILTER_REJECT;
 
       const tagName = parent.tagName.toLowerCase();
       if (["script", "style", "noscript", "iframe"].includes(tagName)) {
@@ -593,6 +607,7 @@ function highlightTextInNode(textNode, phrase, severity, tooltip) {
     const span = document.createElement("span");
     span.className = `phishguard-highlight phishguard-${severity}`;
     span.textContent = match;
+    span.dataset.phishguardMark = severity;
     span.setAttribute("data-phishguard-tooltip", tooltip);
 
     const fragment = document.createDocumentFragment();
@@ -611,9 +626,10 @@ function highlightTextInNode(textNode, phrase, severity, tooltip) {
  * Highlight phrases from API response
  */
 function highlightSuspiciousPhrases(phrases) {
-  if (!phrases || phrases.length === 0) return;
+  if (!highlightingEnabled || !Array.isArray(phrases) || phrases.length === 0) return;
+  phrases = phrases.filter(p => typeof p === "string" && p.length > 0).slice(0,50);
 
-  console.log("[PhishGuard] Highlighting phrases from API:", phrases);
+
   injectHighlightStyles();
 
   const textNodes = getTextNodes(document.body);
@@ -622,7 +638,7 @@ function highlightSuspiciousPhrases(phrases) {
     const text = node.textContent.toLowerCase();
 
     phrases.forEach((phrase) => {
-      if (text.includes(phrase.toLowerCase())) {
+      if (node.isConnected && text.includes(phrase.toLowerCase())) {
         highlightTextInNode(
           node,
           phrase,
@@ -728,7 +744,12 @@ function injectHighlightStyles() {
  * Show floating summary of highlighted items
  */
 function showHighlightSummary(count) {
-  if (document.getElementById("phishguard-highlight-summary")) return;
+  count = highlightedElements.filter(el => el.isConnected).length;
+  const existing = document.getElementById("phishguard-highlight-summary");
+  if (existing) {
+    existing.querySelector('.phishguard-summary-text').textContent = `${count} suspicious text areas highlighted`;
+    return;
+  }
 
   const summary = document.createElement("div");
   summary.id = "phishguard-highlight-summary";
@@ -786,7 +807,8 @@ function toggleHighlights() {
 // Check NLP setting from storage and run highlighting
 async function initializeHighlighting() {
   try {
-    const settings = await chrome.storage.local.get(["nlpHighlightingEnabled"]);
+    const settings = await chrome.runtime.sendMessage({type: "GET_SETTINGS"});
+    if (settings.enabled === false) return;
     highlightingEnabled = settings.nlpHighlightingEnabled !== false; // Default to true
   } catch (e) {
     highlightingEnabled = true;
@@ -795,36 +817,29 @@ async function initializeHighlighting() {
   if (highlightingEnabled && document.body) {
     console.log("[PhishGuard] Starting page scan for suspicious text...");
     scanAndHighlightPage();
-    setupMutationObserver();
   }
+  setupMutationObserver();
 }
 
+let pageObserver;
 function setupMutationObserver() {
-  if (!document.body) return;
-
-  // Watch for dynamic content
-  const observer = new MutationObserver((mutations) => {
-    if (!highlightingEnabled) return;
-
-    // Debounce - only scan if significant changes
-    let hasNewContent = mutations.some(
-      (m) =>
-        m.addedNodes.length > 0 &&
-        Array.from(m.addedNodes).some(
-          (n) => n.nodeType === 1 && n.textContent?.length > 50,
-        ),
-    );
-
-    if (hasNewContent) {
-      clearTimeout(window.phishguardScanTimeout);
-      window.phishguardScanTimeout = setTimeout(scanAndHighlightPage, 2000);
-    }
+  if (!document.body || pageObserver) return;
+  pageObserver = new MutationObserver(mutations => {
+    const newText = mutations.some(mutation => {
+      const target = mutation.target.nodeType === 1 ? mutation.target : mutation.target.parentElement;
+      if (target?.closest('[id^="phishguard-"], [data-phishguard-mark]')) return false;
+      if (mutation.type === 'characterData') return true;
+      if ([...mutation.addedNodes].some(n => n.nodeType === 1 && n.hasAttribute('data-phishguard-mark'))) return false;
+      return [...mutation.addedNodes].some(n => !n.id?.startsWith('phishguard-') && n.textContent?.trim());
+    });
+    if (!newText) return;
+    clearTimeout(window.phishguardScanTimeout);
+    window.phishguardScanTimeout = setTimeout(() => {
+      if (highlightingEnabled) scanAndHighlightPage();
+      performFullAnalysis();
+    }, 500);
   });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
+  pageObserver.observe(document.body, {childList: true, subtree: true, characterData: true});
 }
 
 // Wait for page to fully load, then scan
@@ -842,7 +857,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     highlightingEnabled = message.enabled;
 
     if (highlightingEnabled) {
-      // Re-scan page
+      highlightedElements = highlightedElements.filter(el => el.isConnected);
+      highlightedElements.forEach(el => el.classList.add('phishguard-highlight', `phishguard-${el.dataset.phishguardMark}`));
       scanAndHighlightPage();
     } else {
       // Remove all highlights
@@ -859,5 +875,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     sendResponse({ success: true, enabled: highlightingEnabled });
   }
-  return true;
+  return false;
 });

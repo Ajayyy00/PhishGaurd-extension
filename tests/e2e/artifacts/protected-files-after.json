@@ -1,0 +1,18 @@
+{
+  "unchanged": true,
+  "files": {
+    "models\\saved\\.gitkeep": "073ee894789b4796ff389299c5caa80d7c0fbfdb1ec06ec02f372af0b8c9b913",
+    "models\\saved\\lgbm_url_model.txt": "2a2c37225de1978a8fe6f150095645a51ad091b6959744fff28b61606dfb3d29",
+    "models\\saved\\nlp_phish_model\\config.json": "68a46214b9d7ce11476e2e16bebb1d31186cf66255dec95987ed1a6c3448a813",
+    "models\\saved\\nlp_phish_model\\model.safetensors": "fd7e4c1e3452ad211703596f43ead4a14c4d4d217b066aaa1a775ee4cd0eb38e",
+    "models\\saved\\nlp_phish_model\\special_tokens_map.json": "5aa43c2f985a25296d5a5ce621c2f77376ca8091a47993c492fd5460b895b140",
+    "models\\saved\\nlp_phish_model\\tokenizer.json": "7bec6ee506e36b06c3b2f42e32c2260d7474fc3994f9b08210ebb624a811867b",
+    "models\\saved\\nlp_phish_model\\tokenizer_config.json": "22d3c9685586476700476763fc910a78dc60e0e3b10a7f97744ee561c26277e3",
+    "models\\saved\\nlp_phish_model\\vocab.txt": "b49e80874c5efbc7f4cde245a812673b05ef1360ced56b8bc8c750eaeef3fe0f",
+    "models\\training\\feature_engine.py": "697eb1ab6d3a988454bcee7736c5161ddee09f2ae445b3735fd26ed0f633422f",
+    "models\\training\\predict.py": "344136515059bbb4a99bf3d62e22ef052e5d2b283556ca189412d0f357f06856",
+    "models\\training\\train_lgbm.py": "0e913703c90815b5a461039083d9c2a4a22059fcaffea6b4ec8ae2bd175deb9b",
+    "models\\training\\train_nlp.py": "23daa2ce4ca16edc6a5abe48c933bd5bcae6f542d7d5cc2fa9780f8066d5cd81",
+    "models\\training\\__init__.py": "c6456767dc568513a4098f094d4f6a44a0063e7c6f69c6c83fb9f4cde1affb13"
+  }
+}

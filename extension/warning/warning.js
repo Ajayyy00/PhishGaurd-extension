@@ -5,14 +5,17 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Parse URL parameters
   const params = new URLSearchParams(window.location.search);
-  const targetUrl = params.get("url") || "";
-  const riskScore = parseInt(params.get("score")) || 0;
-  const riskLevel = params.get("level") || "unknown";
+  const targetUrl = PhishGuardRisk.httpUrl(params.get("url"));
+  const rawScore = Number(params.get("score"));
+  const riskScore = params.has("score") && PhishGuardRisk.validScore(rawScore) ? rawScore : null;
+  const riskLevel = PhishGuardRisk.level(riskScore);
   const reasons = params.get("reasons") || "";
 
   // Populate UI
-  document.getElementById("urlDisplay").textContent = targetUrl;
-  document.getElementById("riskScore").textContent = riskScore;
+  document.getElementById("urlDisplay").textContent = targetUrl || "Invalid or unsupported target URL";
+  document.querySelector(".risk-label").textContent = params.get("basis") === "url" ? "URL protection score" : "Combined risk score";
+  document.getElementById("proceedBtn").disabled = !targetUrl;
+  document.getElementById("riskScore").textContent = riskScore ?? "--";
 
   const riskLevelEl = document.getElementById("riskLevel");
   riskLevelEl.textContent = riskLevel.toUpperCase();
@@ -25,22 +28,28 @@ document.addEventListener("DOMContentLoaded", () => {
     reasonsArr.forEach((reason) => {
       const item = document.createElement("div");
       item.className = "reason-item";
-      item.innerHTML = `<span class="reason-icon">⚠️</span><span>${reason}</span>`;
+      const icon = document.createElement("span");
+      icon.className = "reason-icon";
+      icon.textContent = "⚠️";
+      const text = document.createElement("span");
+      text.textContent = reason;
+      item.append(icon, text);
       reasonsList.appendChild(item);
     });
   } else {
     reasonsList.innerHTML =
-      '<div class="reason-item"><span class="reason-icon">⚠️</span><span>High-risk URL detected by ML analysis</span></div>';
+      '<div class="reason-item"><span class="reason-icon">⚠️</span><span>Protection threshold exceeded</span></div>';
   }
 
-  // Back button - go to a safe page (Google)
+  // Back button - leave this navigation without a redirect loop
   document.getElementById("backBtn").addEventListener("click", () => {
-    // Always go to Google to avoid redirect loops
-    window.location.href = "https://www.google.com";
+    // A local blank page also works while offline.
+    window.location.replace("about:blank");
   });
 
   // Proceed button - allow the URL
   document.getElementById("proceedBtn").addEventListener("click", () => {
+    if (!targetUrl) return;
     // Send message to background to whitelist this URL temporarily
     chrome.runtime.sendMessage(
       {
@@ -48,7 +57,8 @@ document.addEventListener("DOMContentLoaded", () => {
         url: targetUrl,
       },
       (response) => {
-        window.location.href = targetUrl;
+        if (response?.success) window.location.replace(targetUrl);
+        else document.getElementById("reasonsList").textContent = "Bypass failed. Please retry.";
       },
     );
   });

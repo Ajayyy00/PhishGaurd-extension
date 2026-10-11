@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>PhishGuard connection</title>
+<style>body{font:16px system-ui;max-width:640px;margin:40px auto;padding:20px}label{display:block;margin:20px 0}input{display:block;width:100%;padding:10px;box-sizing:border-box}button{padding:10px;margin-right:10px}#status{white-space:pre-wrap;overflow-wrap:anywhere}</style></head>
+<body><h1>Connect PhishGuard</h1><p>Pair this extension with your local backend. The token stays in this browser profile and is never sent to visited websites.</p>
+<p>Extension origin: <code id="origin"></code></p>
+<p>Add this exact origin to <code>PHISHGUARD_EXTENSION_ORIGINS</code> on the backend.</p>
+<form id="connection-form"><label>Local API URL<input id="endpoint" type="url" required value="http://127.0.0.1:5000/api/analyze"></label>
+<label>API token<input id="token" type="password" autocomplete="off" minlength="32" placeholder="Paste your PHISHGUARD_API_TOKEN; leave blank to keep existing token"></label>
+<button type="submit">Save connection</button><button id="test-connection" type="button">Test connection</button></form>
+<p id="status" role="status"></p><script src="options.js"></script></body></html>

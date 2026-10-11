@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: Canonical JavaScript risk boundaries and HTML escaping
+ok 1 - Canonical JavaScript risk boundaries and HTML escaping
+  ---
+  duration_ms: 3.3781
+  ...
+# Subtest: Bounded URL cache, LRU, exact TTL and full-stage isolation
+ok 2 - Bounded URL cache, LRU, exact TTL and full-stage isolation
+  ---
+  duration_ms: 1.1329
+  ...
+# Subtest: Untrusted settings/bypass and token disclosure are rejected
+ok 3 - Untrusted settings/bypass and token disclosure are rejected
+  ---
+  duration_ms: 18.4166
+  ...
+# [PhishGuard] URL check degraded: Pairing required. Open Connection settings.
+# Subtest: Temporary bypass expires, and offline fallback is never ML-safe
+ok 4 - Temporary bypass expires, and offline fallback is never ML-safe
+  ---
+  duration_ms: 31.575
+  ...
+# Subtest: Malformed API detector scores cannot render as successful ML
+ok 5 - Malformed API detector scores cannot render as successful ML
+  ---
+  duration_ms: 3.1715
+  ...
+# Subtest: Degraded tab result expires quickly so recovery is retried
+ok 6 - Degraded tab result expires quickly so recovery is retried
+  ---
+  duration_ms: 26.665
+  ...
+# Subtest: Warning distinguishes URL-only from combined scores and labels fallback
+ok 7 - Warning distinguishes URL-only from combined scores and labels fallback
+  ---
+  duration_ms: 1.7421
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 166.7134

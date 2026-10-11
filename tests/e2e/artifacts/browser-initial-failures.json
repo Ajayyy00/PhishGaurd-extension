@@ -1,0 +1,80 @@
+{
+  "checks": [
+    {
+      "name": "Real extension service worker, options pairing and authenticated backend",
+      "status": "FAILED",
+      "ms": 30454,
+      "error": "Error: Condition timed out\n    at until (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:35:9)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:102:72\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:100:3"
+    },
+    {
+      "name": "Benign local fixture through existing trusted-domain policy: URL then full analysis",
+      "status": "FAILED",
+      "ms": 35112,
+      "error": "Error: Condition timed out\n    at until (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:35:9)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:110:47\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:109:3"
+    },
+    {
+      "name": "Benign localhost false-positive measurement",
+      "status": "FAILED",
+      "ms": 30481,
+      "error": "Error: Condition timed out\n    at until (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:35:9)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:114:80\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:113:3"
+    },
+    {
+      "name": "Dangerous URL redirects to warning with real model reasons and Go Back",
+      "status": "FAILED",
+      "ms": 30140,
+      "error": "Error: Condition timed out\n    at until (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:35:9)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:120:39\n    at async check (D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:39:22)\n    at async D:\\scam_extension\\phishguard\\tests\\e2e\\browser.cjs:119:3"
+    }
+  ],
+  "observations": [],
+  "pageErrors": [],
+  "console": [
+    {
+      "type": "error",
+      "text": "[PhishGuard] Analysis error: Error: chrome.storage.local.setAccessLevel is not a function\n    at HTMLDocument.<anonymous> (chrome-extension://mihecjaodbnkcoooajmdniinndogined/content/content.js:70:32)"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "error",
+      "text": "[PhishGuard] Analysis error: Error: chrome.storage.local.setAccessLevel is not a function\n    at HTMLDocument.<anonymous> (chrome-extension://mihecjaodbnkcoooajmdniinndogined/content/content.js:70:32)"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "error",
+      "text": "[PhishGuard] Analysis error: Error: chrome.storage.local.setAccessLevel is not a function\n    at HTMLDocument.<anonymous> (chrome-extension://mihecjaodbnkcoooajmdniinndogined/content/content.js:70:32)"
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Starting page scan for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Scanning page for suspicious text..."
+    },
+    {
+      "type": "log",
+      "text": "[PhishGuard] Highlighted 2 suspicious text areas"
+    }
+  ],
+  "requests": [],
+  "browser": {
+    "executable": "chrome.exe",
+    "version": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/134.0.0.0 Safari/537.36",
+    "mode": "headless persistent MV3",
+    "extensionOrigin": "chrome-extension://mihecjaodbnkcoooajmdniinndogined",
+    "profile": "temporary isolated profile outside repository"
+  }
+}

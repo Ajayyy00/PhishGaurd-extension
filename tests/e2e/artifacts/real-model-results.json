@@ -1,0 +1,411 @@
+{
+  "models": {
+    "url": "LightGBM",
+    "nlp": "D:\\scam_extension\\phishguard\\backend\\services\\..\\..\\models\\saved\\nlp_phish_model"
+  },
+  "results": [
+    {
+      "analysis_stage": "full",
+      "breakdown": {
+        "dom": 93,
+        "nlp": 76,
+        "url": 100
+      },
+      "cached": false,
+      "confidence": null,
+      "degraded": false,
+      "detectors": {
+        "dom": {
+          "source": "similarity",
+          "status": "ok"
+        },
+        "nlp": {
+          "source": "model",
+          "status": "ok"
+        },
+        "url": {
+          "source": "model",
+          "status": "ok"
+        }
+      },
+      "dom_risk": 93,
+      "errors": [],
+      "explanation": "Site uses insecure HTTP connection",
+      "explanations": [
+        {
+          "category": "url",
+          "message": "Site uses insecure HTTP connection",
+          "type": "warning"
+        },
+        {
+          "category": "ml",
+          "message": "URL model and URL indicators produced risk score 100/100",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Your account will be closed within 24 hours...' (+0.96)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Enter your password...' (+0.88)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Urgent...' (+0.82)",
+          "type": "danger"
+        },
+        {
+          "category": "content",
+          "message": "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+          "type": "warning"
+        },
+        {
+          "category": "content",
+          "message": "Page requests sensitive info: password",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP model and text indicators produced risk score 76/100",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Login form detected on suspicious domain",
+          "type": "warning"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Deep URL path structure (+3.63)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Many path segments (+1.57)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Long query string (+0.84)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Deep URL path (+0.35)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Many hyphens in URL (+0.33)",
+          "type": "danger"
+        }
+      ],
+      "features": {
+        "hostname": "localhost",
+        "protocol": "http:",
+        "riskFactors": [
+          "insecure_http"
+        ],
+        "safeFactors": []
+      },
+      "final_score": 90,
+      "form_keywords": [
+        "password"
+      ],
+      "is_phishing": true,
+      "level": "dangerous",
+      "model_version": "ecab5d1851920d7e",
+      "nlp_risk": 76,
+      "policy_version": "phase1-v1",
+      "response_time_ms": 250,
+      "risk_level": "dangerous",
+      "risk_score": 90,
+      "should_block": true,
+      "suspicious_phrases": [
+        "urgent",
+        "immediately",
+        "within 24 hours",
+        "verify your account",
+        "account will be closed"
+      ],
+      "url": "http://localhost:8765/benign",
+      "url_risk": 100
+    },
+    {
+      "analysis_stage": "full",
+      "breakdown": {
+        "dom": 93,
+        "nlp": 76,
+        "url": 25
+      },
+      "cached": false,
+      "confidence": null,
+      "degraded": false,
+      "detectors": {
+        "dom": {
+          "source": "similarity",
+          "status": "ok"
+        },
+        "nlp": {
+          "source": "model",
+          "status": "ok"
+        },
+        "url": {
+          "source": "model",
+          "status": "ok"
+        }
+      },
+      "dom_risk": 93,
+      "errors": [],
+      "explanation": "Site uses insecure HTTP connection",
+      "explanations": [
+        {
+          "category": "url",
+          "message": "Site uses insecure HTTP connection",
+          "type": "warning"
+        },
+        {
+          "category": "url",
+          "message": "This is a known trusted domain",
+          "type": "safe"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Your account will be closed within 24 hours...' (+0.96)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Enter your password...' (+0.88)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Urgent...' (+0.82)",
+          "type": "danger"
+        },
+        {
+          "category": "content",
+          "message": "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+          "type": "warning"
+        },
+        {
+          "category": "content",
+          "message": "Page requests sensitive info: password",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP model and text indicators produced risk score 76/100",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Login form detected on suspicious domain",
+          "type": "warning"
+        }
+      ],
+      "features": {
+        "hostname": "fixture.github.com",
+        "protocol": "http:",
+        "riskFactors": [
+          "insecure_http"
+        ],
+        "safeFactors": [
+          "known_safe_domain"
+        ]
+      },
+      "final_score": 65,
+      "form_keywords": [
+        "password"
+      ],
+      "is_phishing": false,
+      "level": "suspicious",
+      "model_version": "ecab5d1851920d7e",
+      "nlp_risk": 76,
+      "policy_version": "phase1-v1",
+      "response_time_ms": 202,
+      "risk_level": "suspicious",
+      "risk_score": 65,
+      "should_block": false,
+      "suspicious_phrases": [
+        "urgent",
+        "immediately",
+        "within 24 hours",
+        "verify your account",
+        "account will be closed"
+      ],
+      "url": "http://fixture.github.com:8765/benign",
+      "url_risk": 25
+    },
+    {
+      "analysis_stage": "full",
+      "breakdown": {
+        "dom": 93,
+        "nlp": 76,
+        "url": 100
+      },
+      "cached": false,
+      "confidence": null,
+      "degraded": false,
+      "detectors": {
+        "dom": {
+          "source": "similarity",
+          "status": "ok"
+        },
+        "nlp": {
+          "source": "model",
+          "status": "ok"
+        },
+        "url": {
+          "source": "model",
+          "status": "ok"
+        }
+      },
+      "dom_risk": 93,
+      "errors": [],
+      "explanation": "Site uses insecure HTTP connection",
+      "explanations": [
+        {
+          "category": "url",
+          "message": "Site uses insecure HTTP connection",
+          "type": "warning"
+        },
+        {
+          "category": "url",
+          "message": "Uses high-risk domain extension (.xyz)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "URL model and URL indicators produced risk score 100/100",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Your account will be closed within 24 hours...' (+0.96)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Enter your password...' (+0.88)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP Model: Suspicious context: 'Urgent...' (+0.82)",
+          "type": "danger"
+        },
+        {
+          "category": "content",
+          "message": "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+          "type": "warning"
+        },
+        {
+          "category": "content",
+          "message": "Page requests sensitive info: password",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "NLP model and text indicators produced risk score 76/100",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+          "type": "danger"
+        },
+        {
+          "category": "dom",
+          "message": "Login form detected on suspicious domain",
+          "type": "warning"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Deep URL path structure (+3.71)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Many path segments (+1.69)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Long query string (+0.71)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: High ratio of special characters (+0.42)",
+          "type": "danger"
+        },
+        {
+          "category": "ml",
+          "message": "ML Model: Deep URL path (+0.37)",
+          "type": "danger"
+        }
+      ],
+      "features": {
+        "hostname": "verify-paypal-account.xyz",
+        "protocol": "http:",
+        "riskFactors": [
+          "insecure_http",
+          "suspicious_tld"
+        ],
+        "safeFactors": []
+      },
+      "final_score": 90,
+      "form_keywords": [
+        "password"
+      ],
+      "is_phishing": true,
+      "level": "dangerous",
+      "model_version": "ecab5d1851920d7e",
+      "nlp_risk": 76,
+      "policy_version": "phase1-v1",
+      "response_time_ms": 233,
+      "risk_level": "dangerous",
+      "risk_score": 90,
+      "should_block": true,
+      "suspicious_phrases": [
+        "urgent",
+        "immediately",
+        "within 24 hours",
+        "verify your account",
+        "account will be closed"
+      ],
+      "url": "http://verify-paypal-account.xyz:8765/login",
+      "url_risk": 100
+    }
+  ]
+}

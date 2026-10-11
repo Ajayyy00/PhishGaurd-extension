@@ -4,8 +4,7 @@ Handles URL and page content analysis endpoints
 """
 
 from flask import Blueprint, request, jsonify, current_app
-from services.analyzer import AnalyzerService
-from utils.validators import validate_analyze_request
+from utils.validators import validate_analyze_request, validate_batch_request
 from utils.errors import APIError
 
 analyze_bp = Blueprint('analyze', __name__)
@@ -29,18 +28,23 @@ def analyze():
         "nlp_risk": 0-100,
         "dom_risk": 0-100,
         "final_score": 0-100,
-        "risk_level": "safe|low|medium|high|critical",
+        "risk_level": "safe|suspicious|dangerous|unknown",
         "is_phishing": boolean,
         "explanations": [...]
     }
     """
     try:
         # Parse and validate request
-        data = request.get_json()
+        data = request.get_json(silent=True)
         
         if not data:
             raise APIError('Request body must be JSON', 400)
         
+        # Accept documented legacy field names without routing to the old heuristic API.
+        if isinstance(data, dict):
+            data = dict(data)
+            if 'text' not in data and 'content' in data: data['text'] = data['content']
+            if 'dom' not in data and 'dom_fingerprint' in data: data['dom'] = data['dom_fingerprint']
         # Validate input
         validation_error = validate_analyze_request(data)
         if validation_error:
@@ -51,11 +55,11 @@ def analyze():
         text = data.get('text', '')
         dom = data.get('dom', {})
         
-        current_app.logger.info(f"Analyzing URL: {url[:50]}...")
+        current_app.logger.info("Analysis request accepted")
         
         # Run analysis
-        analyzer = AnalyzerService()
-        result = analyzer.analyze(url=url, text=text, dom=dom)
+        analyzer = current_app.extensions['analyzer']
+        result = analyzer.analyze(url=url, text=text, dom=dom, force_refresh=data.get('force_refresh', False))
         
         current_app.logger.info(f"Analysis complete - Risk: {result.get('final_score', 0)}")
         
@@ -66,7 +70,7 @@ def analyze():
         return jsonify({'error': e.message}), e.status_code
         
     except Exception as e:
-        current_app.logger.error(f"Unexpected error: {str(e)}")
+        current_app.logger.error("Analysis failure (%s)", type(e).__name__)
         return jsonify({'error': 'Internal server error'}), 500
 
 
@@ -81,24 +85,23 @@ def batch_analyze():
     }
     """
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         
-        if not data or 'urls' not in data:
-            raise APIError('Missing required field: urls', 400)
-        
-        urls = data.get('urls', [])
-        
-        if not isinstance(urls, list):
-            raise APIError('urls must be an array', 400)
-        
-        if len(urls) > 100:
-            raise APIError('Maximum 100 URLs per batch', 400)
-        
-        analyzer = AnalyzerService()
+        validation_error = validate_batch_request(data)
+        if validation_error:
+            raise APIError(validation_error, 400)
+        urls = data['urls']
+
+        analyzer = current_app.extensions['analyzer']
         results = []
         
         for url in urls:
-            result = analyzer.analyze(url=url, text='', dom={})
+            try:
+                result = analyzer.analyze(url=url, text='', dom={})
+            except Exception as error:
+                current_app.logger.error('Batch item failed (%s)', type(error).__name__)
+                result = {'url': url, 'error': 'Analysis unavailable', 'risk_level': 'unknown',
+                          'final_score': None, 'degraded': True}
             results.append(result)
         
         return jsonify({'results': results})
@@ -107,5 +110,5 @@ def batch_analyze():
         return jsonify({'error': e.message}), e.status_code
         
     except Exception as e:
-        current_app.logger.error(f"Batch error: {str(e)}")
+        current_app.logger.error("Batch failure (%s)", type(e).__name__)
         return jsonify({'error': 'Internal server error'}), 500

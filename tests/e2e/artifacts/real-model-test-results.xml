@@ -1,0 +1,1 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="0" failures="0" skipped="0" tests="1" time="3.045" timestamp="2026-10-10T20:50:41.628919" hostname="[REDACTED]"><testcase classname="backend.tests.test_real_models" name="test_saved_models_and_full_pipeline" time="3.009" /></testsuite></testsuites>

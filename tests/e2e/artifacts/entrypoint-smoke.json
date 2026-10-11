@@ -1,0 +1,36 @@
+{
+  "health": [
+    200,
+    {
+      "service": "phishguard-api",
+      "status": "healthy"
+    }
+  ],
+  "unauthenticated_status": [
+    401,
+    {
+      "error": "Unauthorized"
+    }
+  ],
+  "authenticated_info": [
+    200,
+    {
+      "description": "Real-time phishing detection API",
+      "endpoints": {
+        "GET /api/info": "Get API information",
+        "GET /api/status": "Get API status",
+        "GET /health": "Health check",
+        "POST /api/analyze": "Analyze URL, text, and DOM",
+        "POST /api/batch": "Batch analyze multiple URLs"
+      },
+      "name": "PhishGuard API",
+      "version": "1.0.0"
+    }
+  ],
+  "rejected_origin": [
+    403,
+    {
+      "error": "Origin not authorized"
+    }
+  ]
+}

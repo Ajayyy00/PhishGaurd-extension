@@ -7,14 +7,6 @@ import pytest
 from app import create_app
 
 
-@pytest.fixture
-def client():
-    """Create test client"""
-    app = create_app('testing')
-    with app.test_client() as client:
-        yield client
-
-
 def test_health_check(client):
     """Test health check endpoint"""
     response = client.get('/health')
@@ -37,7 +29,8 @@ def test_analyze_url_missing_url(client):
     assert response.status_code == 400
 
 
-def test_analyze_url_valid(client):
+def test_analyze_url_valid(client, app, service):
+    app.extensions["analyzer"] = service
     """Test analyze endpoint with valid URL"""
     response = client.post('/api/analyze', json={
         'url': 'https://example.com'

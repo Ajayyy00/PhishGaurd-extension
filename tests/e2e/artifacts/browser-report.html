@@ -1,0 +1,578 @@
+<!doctype html><meta charset="utf-8"><title>PhishGuard executed browser checks</title><h1>Actual browser results</h1><pre>{
+  &quot;checks&quot;: [
+    {
+      &quot;name&quot;: &quot;Real extension service worker, options pairing and authenticated backend&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 560,
+      &quot;detail&quot;: {
+        &quot;serviceWorker&quot;: &quot;chrome-extension://mihecjaodbnkcoooajmdniinndogined/background/background.js&quot;,
+        &quot;status&quot;: {
+          &quot;nlp&quot;: &quot;loaded&quot;,
+          &quot;url&quot;: &quot;loaded&quot;
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Benign local fixture through existing trusted-domain policy: URL then full analysis&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 373,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://fixture.github.com:8765/benign&quot;,
+        &quot;timestamp&quot;: 1791647481453,
+        &quot;riskScore&quot;: 8,
+        &quot;finalScore&quot;: 8,
+        &quot;riskLevel&quot;: &quot;safe&quot;,
+        &quot;isPhishing&quot;: false,
+        &quot;shouldBlock&quot;: false,
+        &quot;confidence&quot;: null,
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;fixture.github.com&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;
+          ],
+          &quot;safeFactors&quot;: [
+            &quot;known_safe_domain&quot;
+          ]
+        },
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;This is a known trusted domain&quot;,
+            &quot;type&quot;: &quot;safe&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Community Library...&#39; (+0.99)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;urlRisk&quot;: 25,
+        &quot;nlpRisk&quot;: 2,
+        &quot;domRisk&quot;: 0,
+        &quot;analysisStage&quot;: &quot;full&quot;,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;degraded&quot;: false,
+        &quot;errors&quot;: [],
+        &quot;suspicious_phrases&quot;: [],
+        &quot;apiResponse&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Benign localhost false-positive measurement&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 333,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://localhost:8765/benign&quot;,
+        &quot;score&quot;: &quot;100&quot;,
+        &quot;outcome&quot;: &quot;FALSE POSITIVE: trained model blocks benign local hostname&quot;
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Dangerous URL redirects to warning with real model reasons and Go Back&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 532
+    },
+    {
+      &quot;name&quot;: &quot;Proceed Anyway, bypass and real MiniLM/DOM full phishing analysis&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 1970,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://verify-paypal-account.xyz:8765/login&quot;,
+        &quot;timestamp&quot;: 1791647483002,
+        &quot;riskScore&quot;: 90,
+        &quot;finalScore&quot;: 90,
+        &quot;riskLevel&quot;: &quot;dangerous&quot;,
+        &quot;isPhishing&quot;: true,
+        &quot;shouldBlock&quot;: true,
+        &quot;confidence&quot;: null,
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;verify-paypal-account.xyz&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;,
+            &quot;suspicious_tld&quot;
+          ],
+          &quot;safeFactors&quot;: []
+        },
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Confirm your identity...&#39; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Dummy email...&#39; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Verify your account immediately...&#39; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Dummy password...&#39; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#39;Demonstration only...&#39; (+0.99)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Found 5 suspicious phrase(s): urgent, immediately, within 24 hours&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Page requests sensitive info: password&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP model and text indicators produced risk score 76/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Page structure matches PAYPAL (86.6% similar) but domain is different!&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Login form detected on suspicious domain&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.71)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many path segments (+1.69)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Long query string (+0.71)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.42)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path (+0.37)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;urlRisk&quot;: 100,
+        &quot;nlpRisk&quot;: 76,
+        &quot;domRisk&quot;: 93,
+        &quot;analysisStage&quot;: &quot;full&quot;,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;degraded&quot;: false,
+        &quot;errors&quot;: [],
+        &quot;suspicious_phrases&quot;: [
+          &quot;urgent&quot;,
+          &quot;immediately&quot;,
+          &quot;within 24 hours&quot;,
+          &quot;verify your account&quot;,
+          &quot;confirm your identity&quot;
+        ],
+        &quot;apiResponse&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Popup dashboard, full score/bars, rescan, toggle and reopen&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 1598
+    },
+    {
+      &quot;name&quot;: &quot;Dynamic text, highlighting without nesting, observer settles and interactions&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 2801
+    },
+    {
+      &quot;name&quot;: &quot;XSS regression: warning parameters, popup explanations and restricted target&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 1011
+    },
+    {
+      &quot;name&quot;: &quot;Multiple tabs, rapid navigation, redirect and reload discard stale results&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 840
+    },
+    {
+      &quot;name&quot;: &quot;Empty/long page, encoded special characters and overlong URL rejection&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 1180
+    },
+    {
+      &quot;name&quot;: &quot;Malformed API response and real network timeout visibly degrade and recover&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 8173
+    },
+    {
+      &quot;name&quot;: &quot;Stopped Flask: safe/suspicious navigation fallback and restart recovery&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 11913
+    },
+    {
+      &quot;name&quot;: &quot;Service-worker stop/restart retains pairing and session bypass&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 275
+    },
+    {
+      &quot;name&quot;: &quot;Browser restart retains connection settings and clears temporary bypass&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 32732
+    },
+    {
+      &quot;name&quot;: &quot;Ordinary public website (non-gating availability check)&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 442
+    },
+    {
+      &quot;name&quot;: &quot;No uncaught page or worker JavaScript exceptions&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;ms&quot;: 0
+    }
+  ],
+  &quot;observations&quot;: [
+    {
+      &quot;url&quot;: &quot;http://localhost:8765/benign&quot;,
+      &quot;score&quot;: &quot;100&quot;,
+      &quot;outcome&quot;: &quot;FALSE POSITIVE: trained model blocks benign local hostname&quot;
+    },
+    {
+      &quot;publicWebsite&quot;: &quot;https://www.wikipedia.org/&quot;,
+      &quot;stage&quot;: &quot;url_only&quot;,
+      &quot;degraded&quot;: false
+    }
+  ],
+  &quot;pageErrors&quot;: [],
+  &quot;workerErrors&quot;: [],
+  &quot;console&quot;: [
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Starting page scan for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] URL was bypassed, allowing&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Starting page scan for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Highlighted 2 suspicious text areas&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] URL was bypassed, allowing&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Starting page scan for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Highlighted 2 suspicious text areas&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Highlighted 2 suspicious text areas&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Highlighted 1 suspicious text areas&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Highlighted 2 suspicious text areas&quot;
+    },
+    {
+      &quot;type&quot;: &quot;error&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Analysis error: Error: Untrusted context\n    at HTMLDocument.&lt;anonymous&gt; (chrome-extension://mihecjaodbnkcoooajmdniinndogined/content/content.js:70:32)&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Starting page scan for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Starting page scan for suspicious text...&quot;
+    },
+    {
+      &quot;type&quot;: &quot;log&quot;,
+      &quot;text&quot;: &quot;[PhishGuard] Scanning page for suspicious text...&quot;
+    }
+  ],
+  &quot;requests&quot;: [
+    {
+      &quot;path&quot;: &quot;/api/status&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;GET&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/status&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;GET&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/status&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;GET&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/status&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;GET&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    },
+    {
+      &quot;path&quot;: &quot;/api/analyze&quot;,
+      &quot;status&quot;: 200,
+      &quot;method&quot;: &quot;POST&quot;
+    }
+  ],
+  &quot;browser&quot;: {
+    &quot;executable&quot;: &quot;chrome.exe&quot;,
+    &quot;version&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/134.0.0.0 Safari/537.36&quot;,
+    &quot;mode&quot;: &quot;headless persistent MV3&quot;,
+    &quot;extensionOrigin&quot;: &quot;chrome-extension://mihecjaodbnkcoooajmdniinndogined&quot;,
+    &quot;profile&quot;: &quot;temporary isolated profile outside repository&quot;
+  },
+  &quot;popupTargets&quot;: [
+    {
+      &quot;type&quot;: &quot;page&quot;,
+      &quot;url&quot;: &quot;chrome-extension://mihecjaodbnkcoooajmdniinndogined/popup/popup.html&quot;
+    }
+  ],
+  &quot;popupMode&quot;: &quot;Native action popup inspected with Chrome DevTools Protocol; real mouse events&quot;,
+  &quot;finishedAt&quot;: &quot;2026-10-10T15:52:25.863Z&quot;
+}</pre>

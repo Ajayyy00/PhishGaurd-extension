@@ -4,6 +4,7 @@ Detects phishing by comparing DOM structure to known site templates
 """
 
 import re
+from threading import RLock
 import math
 from typing import Dict, Any, List, Tuple, Optional
 from collections import Counter
@@ -145,7 +146,7 @@ class DOMDetector:
                 pass
         
         # Generate fingerprint for current page
-        fingerprint = self._generate_fingerprint(dom)
+        fingerprint = self._generate_fingerprint(dom, url)
         
         # Compare against all templates
         best_match = None
@@ -164,7 +165,7 @@ class DOMDetector:
             expected_domain = self.SITE_TEMPLATES[best_match]['domain']
             if expected_domain and current_domain:
                 # Check if current domain is NOT the expected domain
-                if expected_domain not in current_domain.lower():
+                if current_domain.lower() != expected_domain and not current_domain.lower().endswith('.' + expected_domain):
                     is_domain_mismatch = True
         
         # Calculate risk score
@@ -190,7 +191,7 @@ class DOMDetector:
             'fingerprint': fingerprint
         }
     
-    def _generate_fingerprint(self, dom: Dict) -> Dict[str, Any]:
+    def _generate_fingerprint(self, dom: Dict, url: str = '') -> Dict[str, Any]:
         """Generate structural fingerprint from DOM data."""
         fingerprint = {
             'has_credential_form': False,
@@ -246,14 +247,14 @@ class DOMDetector:
             action = str(form.get('action', '')).lower()
             if action and action.startswith('http'):
                 # Form submits to external URL
-                fingerprint['suspicious_form_action'] = True
+                fingerprint['suspicious_form_action'] = fingerprint['suspicious_form_action'] or urlparse(action).hostname != urlparse(url).hostname
         
         # Try to detect brand from DOM content
         visible_text = dom.get('visibleText', '').lower() if dom.get('visibleText') else ''
         title = dom.get('title', '').lower() if dom.get('title') else ''
         
         brand_indicators = {
-            'paypal': ['paypal', 'pp'],
+            'paypal': ['paypal'],
             'gmail': ['gmail', 'google'],
             'facebook': ['facebook', 'fb', 'meta'],
             'amazon': ['amazon'],
@@ -321,7 +322,7 @@ class DOMDetector:
             # This will be factored into the score if brand matches template
             weights_sum += brand_match_weight
             for tmpl_name, tmpl_data in self.SITE_TEMPLATES.items():
-                if detected_brand == tmpl_name:
+                if detected_brand == tmpl_name and template_features is tmpl_data['features']:
                     score += brand_match_weight
                     break
         
@@ -351,13 +352,15 @@ class DOMDetector:
 
 # Singleton instance
 _dom_detector_instance = None
+_init_lock = RLock()
 
 
 def get_dom_detector() -> DOMDetector:
     """Get or create singleton DOM detector instance."""
     global _dom_detector_instance
-    if _dom_detector_instance is None:
-        _dom_detector_instance = DOMDetector()
+    with _init_lock:
+        if _dom_detector_instance is None:
+            _dom_detector_instance = DOMDetector()
     return _dom_detector_instance
 
 

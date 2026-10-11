@@ -7,6 +7,7 @@ flask-cors==4.0.0
 gunicorn==21.2.0
 
 # ML Core
+lightgbm==4.6.0
 scikit-learn==1.4.0
 numpy==1.26.3
 pandas==2.1.4

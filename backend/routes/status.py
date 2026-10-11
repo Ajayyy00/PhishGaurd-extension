@@ -3,7 +3,7 @@ PhishGuard Status Routes
 Handles API status and info endpoints
 """
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 
 status_bp = Blueprint('status', __name__)
 
@@ -13,18 +13,16 @@ def api_status():
     """
     Get API status and model information.
     """
+    from services import url_detector, nlp_detector
+    url_loaded = url_detector._detector_instance is not None and url_detector._detector_instance.model is not None
+    nlp_loaded = nlp_detector._nlp_detector_instance is not None and nlp_detector._nlp_detector_instance.model is not None
     return jsonify({
-        'status': 'operational',
-        'version': '1.0.0',
-        'model_loaded': False,
-        'model_version': None,
-        'analysis_mode': 'heuristic',
-        'capabilities': {
-            'url_analysis': True,
-            'nlp_analysis': False,
-            'dom_analysis': True,
-            'ml_inference': False
-        }
+        'status': 'operational', 'version': '1.1.0', 'model_loaded': url_loaded and nlp_loaded,
+        'model_version': current_app.extensions['analyzer'].model_revision,
+        'analysis_mode': 'url_nlp_dom',
+        'models': {'url': 'loaded' if url_loaded else 'not_loaded', 'nlp': 'loaded' if nlp_loaded else 'not_loaded'},
+        'capabilities': {'url_analysis': True, 'nlp_analysis': True, 'dom_analysis': True, 'ml_inference': True},
+        'cache': current_app.extensions['analyzer']._cache.stats(),
     })
 
 
