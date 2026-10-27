@@ -5,14 +5,17 @@ Flask REST API for phishing detection
 
 import os
 import logging
+import re
 from flask import Flask
-from flask_cors import CORS
+from werkzeug.exceptions import HTTPException
 
 from routes import register_routes
 from utils.logger import setup_logging
+from utils.security import install_security
+from services.analyzer import AnalyzerService
 
 
-def create_app(config_name: str = None) -> Flask:
+def create_app(config_name: str = None, overrides=None) -> Flask:
     """
     Application factory for creating Flask app instances.
     
@@ -26,25 +29,46 @@ def create_app(config_name: str = None) -> Flask:
     app = Flask(__name__)
     
     # Load configuration
-    config_name = config_name or os.getenv('FLASK_ENV', 'development')
+    config_name = config_name or os.getenv('FLASK_ENV', 'production')
     app.config.from_mapping(
-        SECRET_KEY=os.getenv('SECRET_KEY', 'dev-secret-key'),
+        SECRET_KEY=os.getenv('SECRET_KEY'),
         DEBUG=config_name == 'development',
         TESTING=config_name == 'testing',
-        JSON_SORT_KEYS=False
+        JSON_SORT_KEYS=False,
+        API_TOKEN=os.getenv('PHISHGUARD_API_TOKEN', ''),
+        EXTENSION_ORIGINS=[s.strip() for s in os.getenv('PHISHGUARD_EXTENSION_ORIGINS', '').split(',') if s.strip()],
+        MAX_CONTENT_LENGTH=262144,
+        ANALYSIS_RATE_LIMIT=120,
+        DETECTOR_TIMEOUT=20,
+        CACHE_MAXSIZE=512,
+        CACHE_TTL=86400,
     )
+    if overrides:
+        app.config.update(overrides)
+    if any(not re.fullmatch(r'chrome-extension://[a-p]{32}', origin) for origin in app.config['EXTENSION_ORIGINS']):
+        raise ValueError('Only exact chrome-extension://<32-letter ID> origins are allowed')
     
     # Setup logging
     setup_logging(app, config_name)
     
-    # Enable CORS for extension communication
-    CORS(app, resources={
-        r"/api/*": {
-            "origins": ["*", "chrome-extension://*"],
-            "methods": ["GET", "POST", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Accept"]
-        }
-    })
+    install_security(app)
+    # Initialize the real detectors before accepting requests. Missing artifacts
+    # remain visible through /api/status and degraded analysis responses.
+    from services.url_detector import get_detector
+    from services.nlp_detector import get_nlp_detector
+    get_detector()
+    get_nlp_detector()
+    app.extensions['analyzer'] = AnalyzerService(cache_size=app.config['CACHE_MAXSIZE'],
+        cache_ttl=app.config['CACHE_TTL'], timeout=app.config['DETECTOR_TIMEOUT'])
+
+    @app.errorhandler(HTTPException)
+    def http_error(error):
+        return {'error': error.name}, error.code
+
+    @app.errorhandler(Exception)
+    def internal_error(error):
+        app.logger.error('Unhandled API failure (%s)', type(error).__name__)
+        return {'error': 'Internal server error'}, 500
     
     # Register all routes
     register_routes(app)
@@ -65,7 +89,7 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    debug = os.getenv('FLASK_ENV', 'development') == 'development'
+    debug = os.getenv('FLASK_ENV', 'production') == 'development'
     
     print(f"Starting PhishGuard API on port {port}...")
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    app.run(host='127.0.0.1', port=port, debug=debug)

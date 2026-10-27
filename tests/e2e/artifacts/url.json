@@ -1,0 +1,32 @@
+{
+  "model_loaded": true,
+  "shap_loaded": true,
+  "score": 100.0,
+  "explanations": [
+    {
+      "feature": "Deep URL path structure",
+      "impact": 3.7244910702214518,
+      "raw_feature": "path_depth"
+    },
+    {
+      "feature": "Many path segments",
+      "impact": 1.6498602067167714,
+      "raw_feature": "num_slashes"
+    },
+    {
+      "feature": "Long query string",
+      "impact": 0.8273786496212218,
+      "raw_feature": "query_length"
+    },
+    {
+      "feature": "Deep URL path",
+      "impact": 0.41709114013469434,
+      "raw_feature": "path_length"
+    },
+    {
+      "feature": "High ratio of special characters",
+      "impact": 0.34741350879479377,
+      "raw_feature": "special_char_ratio"
+    }
+  ]
+}

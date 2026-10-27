@@ -1,0 +1,22 @@
+{
+  "score": 93,
+  "matched_template": "paypal",
+  "similarity": 86.6,
+  "is_domain_mismatch": true,
+  "fingerprint": {
+    "has_credential_form": true,
+    "has_password_field": true,
+    "has_email_field": true,
+    "form_count": 1,
+    "input_count": 3,
+    "tag_signature": {
+      "form": 1,
+      "input": 3,
+      "a": 0,
+      "script": 0,
+      "iframe": 0
+    },
+    "suspicious_form_action": true,
+    "detected_brand": "paypal"
+  }
+}

@@ -1,6 +1,8 @@
 # PhishGuard – Real-Time Scam & Phishing Detection Browser Extension
 
-A production-ready full-stack browser extension for detecting scam and phishing websites in real-time using machine learning.
+A full-stack browser extension for detecting scam and phishing websites using machine learning.
+
+**Main repair branch:** all URL, MiniLM, DOM and explanation features are active. Use the [pairing and startup guide](docs/MAIN_REPAIR_SETUP.md) before starting the API. See the [repair and real-browser verification report](MAIN_REPAIR_REPORT.md) for executed checks and remaining model-accuracy limitations.
 
 ## 🏗️ Project Structure
 
@@ -42,8 +44,9 @@ phishguard/
 ### Machine Learning
 
 - scikit-learn
-- transformers (DistilBERT)
-- SHAP (Explainability)
+- LightGBM URL model
+- transformers (fine-tuned MiniLM)
+- LightGBM native TreeSHAP explanations
 - numpy, pandas
 
 ## 🚀 Getting Started
@@ -65,10 +68,7 @@ pip install -r requirements.txt
 
 ### Extension Setup
 
-```bash
-cd extension
-npm install
-```
+The extension is plain JavaScript and requires no npm build. Load the `extension` folder directly, then configure its Connection settings as described in the startup guide.
 
 ### Loading the Extension
 

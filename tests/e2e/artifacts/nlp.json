@@ -1,0 +1,19 @@
+{
+  "model_loaded": true,
+  "tokenizer_loaded": true,
+  "result": {
+    "score": 76,
+    "model_used": true,
+    "suspicious_phrases": [
+      "urgent",
+      "immediately",
+      "within 24 hours",
+      "verify your account",
+      "confirm your identity"
+    ],
+    "form_keywords": [
+      "password"
+    ],
+    "confidence": 1.0
+  }
+}

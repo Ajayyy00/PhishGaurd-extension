@@ -4,6 +4,7 @@ ML-based URL risk detection using LightGBM and production feature engine.
 """
 
 import re
+from threading import RLock
 import os
 import sys
 from typing import Dict, Any, List, Tuple
@@ -23,6 +24,16 @@ MODEL_PATH = os.path.join(
 )
 
 
+class NativeTreeExplainer:
+    """TreeSHAP contributions from the actual LightGBM booster, without imports."""
+    def __init__(self, model, lock):
+        self.model, self.lock = model, lock
+
+    def shap_values(self, features):
+        with self.lock:
+            return self.model.predict(features, pred_contrib=True, num_threads=1)[:, :-1]
+
+
 class URLDetector:
     """
     URL-based phishing detection using LightGBM.
@@ -33,24 +44,31 @@ class URLDetector:
         """Initialize detector with pre-trained LightGBM model."""
         self.model = None
         self.explainer = None
+        self._explain_lock = RLock()
+        self._model_lock = RLock()
         self.model_path = model_path
         self.feature_names = FEATURE_NAMES
         self._load_model()
 
     def _load_model(self):
+        with self._model_lock:
+            self._load_model_locked()
+
+    def _load_model_locked(self):
         """Load the LightGBM model from disk."""
         try:
             if os.path.exists(self.model_path):
-                self.model = lgb.Booster(model_file=self.model_path)
+                # Native tree offsets assume LF; Windows Git checkouts can contain CRLF.
+                # Normalize in memory without changing the trained artifact.
+                with open(self.model_path, encoding='utf-8') as model_file:
+                    self.model = lgb.Booster(model_str=model_file.read().replace('\r\n', '\n'))
+                self.explainer = NativeTreeExplainer(self.model, self._model_lock)
+                if self.model.feature_name() != FEATURE_NAMES:
+                    self.model = None
+                    self.explainer = None
+                    raise ValueError('Trained URL feature schema does not match inference')
                 print(f"Loaded LightGBM URL model from {self.model_path}")
 
-                # Initialize SHAP explainer
-                try:
-                    import shap
-                    self.explainer = shap.TreeExplainer(self.model)
-                    print("SHAP TreeExplainer initialized for LightGBM URL model")
-                except Exception as e:
-                    print(f"Could not initialize SHAP explainer: {e}")
             else:
                 print(f"LightGBM model not found at {self.model_path}")
         except Exception as e:
@@ -58,62 +76,27 @@ class URLDetector:
 
     def predict(self, url: str) -> float:
         """Predict phishing probability for a URL (0-100)."""
-        if not self.model:
-            return 50.0  # Default if model missing
-
-        features = extract_features(url)
-        try:
-            # LightGBM Booster.predict() returns probabilities directly
-            features_reshaped = features.reshape(1, -1)
-            prob = self.model.predict(features_reshaped)[0]
-            risk_score = prob * 100
-
-            # --- Anti-False-Positive Heuristics ---
-            parsed = urlparse(url)
-            hostname = parsed.hostname or ''
-            query = (parsed.query or '').lower()
-            path = (parsed.path or '').lower()
-
-            # 1. Safe Academic/Gov/Org TLDs
-            safe_tlds = ('.edu', '.ac.in', '.gov', '.mil', '.edu.in', '.ac.uk', '.org')
-            if hostname.endswith(safe_tlds):
-                risk_score *= 0.5  # Reduce risk by half
-
-            # 2. OAuth / SSO Patterns
-            oauth_params = ['client_id=', 'redirect_uri=', 'response_type=', 'state=', 'nonce=', 'oauth']
-            oauth_matches = sum(1 for param in oauth_params if param in query or param in path)
-            if oauth_matches >= 2:
-                risk_score *= 0.4  # Reduce risk significantly
-
-            return round(risk_score, 2)
-        except Exception as e:
-            print(f"Prediction error: {e}")
-            return 50.0
+        return float(self.predict_url_risk(url, strict=True))
 
     def explain_prediction(self, url: str) -> List[Dict[str, Any]]:
         """
         Explain why a URL was predicted as phishing using SHAP.
         Returns top 5 contributing features.
         """
-        if not self.model or not self.explainer:
-            return []
-
+        if not self.model:
+            raise RuntimeError('URL model unavailable for explanation')
         # Don't explain danger if final heuristic score is safe
-        if self.predict(url) < 40:
+        if self.predict_url_risk(url, strict=True) < 40:
             return []
 
         try:
             features = extract_features(url)
             features_reshaped = features.reshape(1, -1)
 
-            # Calculate SHAP values
-            shap_values = self.explainer.shap_values(features_reshaped)
-
-            # Handle different SHAP output formats
-            if isinstance(shap_values, list):
-                vals = shap_values[1][0]
-            else:
-                vals = shap_values[0]
+            # LightGBM's native TreeSHAP uses the same trained trees and avoids
+            # SHAP package/version initialization failures on Windows.
+            with self._explain_lock:
+                vals = self.explainer.shap_values(features_reshaped)[0]
 
             # Create (feature, shap_value) pairs
             feature_contributions = []
@@ -130,8 +113,7 @@ class URLDetector:
             return feature_contributions[:5]
 
         except Exception as e:
-            print(f"Explanation error: {e}")
-            return []
+            raise RuntimeError("URL explanation failed") from None
 
     def _get_readable_feature_name(self, feature: str, url: str) -> str:
         """Convert feature name to human-readable explanation."""
@@ -161,7 +143,7 @@ class URLDetector:
         }
         return mapping.get(feature, feature.replace('_', ' ').capitalize())
 
-    def predict_url_risk(self, url: str) -> int:
+    def predict_url_risk(self, url: str, strict=False) -> int:
         """
         Predict phishing risk score for a URL.
 
@@ -186,7 +168,7 @@ class URLDetector:
             features = extract_features(url).reshape(1, -1)
 
             # LightGBM predict returns probability directly
-            phishing_prob = self.model.predict(features)[0]
+            phishing_prob = self.model.predict(features, num_threads=1)[0]
 
             # Convert to 0-100 score
             score = int(phishing_prob * 100)
@@ -197,6 +179,8 @@ class URLDetector:
             return max(0, min(100, score))
 
         except Exception as e:
+            if strict:
+                raise RuntimeError('URL model inference unavailable') from None
             # Fallback to basic heuristic
             return self._basic_heuristic_score(url)
 
@@ -212,16 +196,7 @@ class URLDetector:
             if self._is_legitimate_brand_domain(hostname):
                 score = min(score, 10)
 
-            # 1. Safe Academic/Gov/Org TLDs
-            safe_tlds = ('.edu', '.ac.in', '.gov', '.mil', '.edu.in', '.ac.uk', '.org')
-            if hostname.endswith(safe_tlds):
-                score = int(score * 0.5)
-
-            # 2. OAuth / SSO Patterns
-            oauth_params = ['client_id=', 'redirect_uri=', 'response_type=', 'state=', 'nonce=', 'oauth']
-            oauth_matches = sum(1 for param in oauth_params if param in query or param in path)
-            if oauth_matches >= 2:
-                score = int(score * 0.4)
+            # TLDs and OAuth-looking parameters do not establish identity or trust.
 
             # IP addresses are very suspicious
             if self._is_ip_address(hostname):
@@ -248,19 +223,18 @@ class URLDetector:
     def _basic_heuristic_score(self, url: str) -> int:
         """Fallback heuristic scoring when ML fails."""
         score = 0
-
-        if not url.startswith('https://'):
-            score += 15
-        if '@' in url:
-            score += 30
-        if re.match(r'https?://\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', url):
-            score += 30
-        if len(url) > 100:
-            score += 10
-        if url.count('.') > 5:
-            score += 10
-
-        return min(100, score)
+        parsed = urlparse(url)
+        hostname = parsed.hostname or ''
+        if any(hostname.endswith(tld) for tld in ('.tk','.ml','.ga','.cf','.gq','.xyz','.top','.work','.click')):
+            score += 50
+        if parsed.scheme != 'https': score += 20
+        if re.fullmatch(r'\d{1,3}(?:\.\d{1,3}){3}', hostname): score += 40
+        if '-' in hostname: score += 5
+        if len(hostname.split('.')) > 4: score += 15
+        if len(hostname) > 30: score += 10
+        if re.search(r'login|signin|account|verify|secure', parsed.path, re.I): score += 10
+        if '@' in url: score += 40
+        return min(score, 100)
 
     def _is_ip_address(self, hostname: str) -> bool:
         """Check if hostname is an IP address."""
@@ -287,7 +261,7 @@ class URLDetector:
         }
 
         for domain in legit_domains:
-            if hostname == domain or hostname.endswith('.' + domain):
+            if hostname in (domain, 'www.' + domain):
                 return True
         return False
 
@@ -309,13 +283,15 @@ class URLDetector:
 
 # Singleton instance for reuse
 _detector_instance = None
+_init_lock = RLock()
 
 
 def get_detector() -> URLDetector:
     """Get or create singleton detector instance."""
     global _detector_instance
-    if _detector_instance is None:
-        _detector_instance = URLDetector()
+    with _init_lock:
+        if _detector_instance is None:
+            _detector_instance = URLDetector()
     return _detector_instance
 
 

@@ -1,9 +1,10 @@
 """
 PhishGuard NLP Detector
-Text-based phishing detection using TF-IDF + Logistic Regression
+Text-based phishing detection using the locally fine-tuned MiniLM transformer
 """
 
 import re
+from threading import RLock
 import os
 import torch
 from typing import Dict, Any, List, Tuple
@@ -15,7 +16,7 @@ NLP_MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', '..', 'models', '
 
 class NLPDetector:
     """
-    NLP-based phishing detection using TF-IDF embeddings and Logistic Regression.
+    NLP-based phishing detection using the locally fine-tuned MiniLM transformer.
     Detects suspicious phrases and form-related keywords.
     """
     
@@ -66,8 +67,8 @@ class NLPDetector:
         """Load the fine-tuned HuggingFace model."""
         if os.path.exists(NLP_MODEL_PATH):
             try:
-                self.tokenizer = AutoTokenizer.from_pretrained(NLP_MODEL_PATH)
-                self.model = AutoModelForSequenceClassification.from_pretrained(NLP_MODEL_PATH)
+                self.tokenizer = AutoTokenizer.from_pretrained(NLP_MODEL_PATH, local_files_only=True)
+                self.model = AutoModelForSequenceClassification.from_pretrained(NLP_MODEL_PATH, local_files_only=True)
                 self.model.to(self.device)
                 self.model.eval()
             except Exception as e:
@@ -197,7 +198,8 @@ class NLPDetector:
         """
         if not text or len(text.strip()) < 10:
             return {
-                'score': 0,
+                'score': None,
+                'model_used': False,
                 'suspicious_phrases': [],
                 'form_keywords': [],
                 'confidence': 0.5
@@ -214,23 +216,32 @@ class NLPDetector:
         # ML-based score prediction
         ml_score = 0
         confidence = 0.5
+        model_used = False
         
         if self.model and self.tokenizer:
             try:
                 processed = self.preprocess_text(text)
-                inputs = self.tokenizer(processed, return_tensors="pt", truncation=True, max_length=256)
+                # Bounded head/tail windows retain late and form-focused evidence.
+                ids = self.tokenizer(processed, add_special_tokens=False)['input_ids']
+                windows = [ids[:254]]
+                if len(ids) > 254:
+                    windows.append(ids[-254:])
+                encoded = [self.tokenizer.prepare_for_model(w, add_special_tokens=True, return_attention_mask=True) for w in windows]
+                inputs = self.tokenizer.pad(encoded, padding=True, return_tensors='pt')
                 inputs = {k: v.to(self.device) for k, v in inputs.items()}
                 
                 with torch.no_grad():
                     outputs = self.model(**inputs)
-                    proba = torch.softmax(outputs.logits, dim=-1)[0].cpu().numpy()
+                    probabilities = torch.softmax(outputs.logits, dim=-1)
+                    proba = probabilities[torch.argmax(probabilities[:, 1])].cpu().numpy()
                     phishing_prob = proba[1]
                 
                 ml_score = int(phishing_prob * 100)
-                confidence = max(proba)
+                confidence = float(max(proba))
+                model_used = True
                 
             except Exception as e:
-                print(f"Transformers prediction error: {e}")
+                print(f"Transformers prediction error: {type(e).__name__}")
         
         # Combine scores (weighted)
         # ML: 50%, Phrases: 30%, Form keywords: 20%
@@ -243,9 +254,14 @@ class NLPDetector:
         # Boost for multiple indicators
         if suspicious_phrases and form_keywords:
             final_score = min(100, final_score + 10)
+        if model_used and phishing_prob >= 0.85:
+            final_score = max(final_score, 75)
         
         return {
-            'score': max(0, min(100, final_score)),
+            'score': max(0, min(100, final_score)) if model_used else None,
+            'model_used': model_used,
+            'transformer_probability': float(phishing_prob) if model_used else None,
+            'windows_evaluated': len(windows) if model_used else 0,
             'suspicious_phrases': suspicious_phrases[:5],  # Limit to top 5
             'form_keywords': form_keywords[:5],
             'confidence': round(confidence, 2)
@@ -254,13 +270,15 @@ class NLPDetector:
 
 # Singleton instance
 _nlp_detector_instance = None
+_init_lock = RLock()
 
 
 def get_nlp_detector() -> NLPDetector:
     """Get or create singleton NLP detector instance."""
     global _nlp_detector_instance
-    if _nlp_detector_instance is None:
-        _nlp_detector_instance = NLPDetector()
+    with _init_lock:
+        if _nlp_detector_instance is None:
+            _nlp_detector_instance = NLPDetector()
     return _nlp_detector_instance
 
 

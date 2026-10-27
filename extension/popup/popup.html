@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PhishGuard</title>
     <link rel="stylesheet" href="popup.css" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
     <div class="app-container">
@@ -32,7 +28,6 @@
             src=""
             alt=""
             class="favicon"
-            onerror="this.style.display = 'none'"
           />
           <div class="url-text">
             <span id="domain" class="domain">analyzing...</span>
@@ -59,7 +54,7 @@
                 class="gauge-val"
                 d="M20 100 A 80 80 0 0 1 180 100"
                 fill="none"
-                stroke="#22c55e"
+                stroke="#94a3b8"
                 stroke-width="20"
                 stroke-linecap="round"
                 stroke-dasharray="251.2"
@@ -72,7 +67,7 @@
             </div>
           </div>
           <div class="risk-badge-container">
-            <span id="risk-badge" class="risk-badge safe">Analyzing</span>
+            <span id="risk-badge" class="risk-badge unknown">Analyzing</span>
           </div>
         </section>
 
@@ -139,6 +134,9 @@
         </div>
       </footer>
     </div>
+    <p id="analysis-status" role="status"></p>
+    <button id="connection-settings" type="button">Connection settings</button>
+    <script src="../shared/risk.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

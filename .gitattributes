@@ -1,0 +1,4 @@
+# Native LightGBM offsets are based on LF, including on Windows.
+models/saved/*.txt text eol=lf
+models/saved/**/*.json text eol=lf
+*.safetensors -text

@@ -190,7 +190,7 @@ def extract_features_batch(urls: pd.Series) -> np.ndarray:
         # Boolean features
         hostnames.apply(lambda h: float(bool(_RE_IP_ADDR.match(h)))).values.astype(np.float32),
         (schemes == "https").values.astype(np.float32),
-        ports.apply(lambda p: float(bool(p and p not in (80, 443)))).values.astype(np.float32),
+        ports.apply(lambda p: float(pd.notna(p) and p not in (0, 80, 443))).values.astype(np.float32),
         # Statistical features
         urls.apply(_shannon_entropy).values.astype(np.float32),
         urls.str.count(r"\d").values.astype(np.float32) / safe_len,

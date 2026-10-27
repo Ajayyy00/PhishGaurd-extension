@@ -4,6 +4,7 @@
  */
 
 "use strict";
+importScripts("../shared/risk.js");
 
 // ============================================================================
 // Configuration
@@ -11,7 +12,8 @@
 
 const CONFIG = {
   API_ENDPOINT: "http://127.0.0.1:5000/api/analyze",
-  API_TIMEOUT: 2000, // 2 seconds for fast URL check, fall back quickly if offline
+  API_TIMEOUT: 8000,
+  CONTENT_TIMEOUT: 25000,
   CACHE_TTL: 300000, // 5 minutes
   MAX_RETRIES: 1,
   BLOCK_THRESHOLD: 50, // Block URLs with risk >= 50
@@ -26,11 +28,90 @@ const state = {
   analysisCache: new Map(),
   pendingRequests: new Map(),
   bypassedUrls: new Set(), // URLs user chose to proceed to
+  bypassExpiries: {},
+  navigation: new Map(),
   settings: {
     enabled: true,
     apiEndpoint: CONFIG.API_ENDPOINT,
   },
 };
+
+// IndexedDB belongs to the extension origin. Content scripts use the visited
+// page's IndexedDB origin and cannot read this token (including older Chrome).
+function tokenStore(operation, value) {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('phishguard-pairing', 1);
+    request.onupgradeneeded = () => request.result.createObjectStore('credentials');
+    request.onerror = () => reject(new Error('Cannot open private pairing store'));
+    request.onsuccess = () => {
+      const db = request.result;
+      const tx = db.transaction('credentials', operation === 'put' ? 'readwrite' : 'readonly');
+      const store = tx.objectStore('credentials');
+      const item = operation === 'put' ? store.put(value, 'apiToken') : store.get('apiToken');
+      tx.oncomplete = () => { const result = item.result; db.close(); resolve(result); };
+      tx.onerror = tx.onabort = () => { db.close(); reject(new Error('Private pairing store unavailable')); };
+    };
+  });
+}
+
+const ready = (async () => {
+  if (chrome.storage.local.setAccessLevel) await chrome.storage.local.setAccessLevel({accessLevel: "TRUSTED_CONTEXTS"});
+  const saved = await chrome.storage.local.get(["enabled", "apiEndpoint"]);
+  saved.apiToken = await tokenStore('get');
+  state.settings = {...state.settings, ...saved};
+  if (saved.apiEndpoint && validEndpoint(saved.apiEndpoint)) CONFIG.API_ENDPOINT = saved.apiEndpoint;
+  const session = await chrome.storage.session.get(["bypassExpiries"]);
+  state.bypassExpiries = session.bypassExpiries || {};
+  for (const [url, expiry] of Object.entries(state.bypassExpiries)) {
+    if (expiry > Date.now()) state.bypassedUrls.add(url);
+  }
+})();
+
+function validEndpoint(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname) &&
+      url.pathname === "/api/analyze" && !url.username && !url.password && !url.search && !url.hash;
+  } catch { return false; }
+}
+
+function trustedPage(sender) {
+  return sender.id === chrome.runtime.id && ["popup/popup.html", "options/options.html", "warning/warning.html"]
+    .some(path => sender.url?.split("?")[0] === chrome.runtime.getURL(path));
+}
+
+async function requestApi(payload, timeoutMs = CONFIG.API_TIMEOUT, endpoint = CONFIG.API_ENDPOINT) {
+  await ready;
+  if (!state.settings.apiToken) throw new Error("Pairing required. Open Connection settings.");
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(endpoint, {
+      method: payload ? "POST" : "GET", cache: "no-store", redirect: "error", credentials: "omit",
+      headers: {"Content-Type": "application/json", "Authorization": `Bearer ${state.settings.apiToken}`},
+      body: payload ? JSON.stringify(payload) : undefined, signal: controller.signal,
+    });
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    return await response.json();
+  } finally { clearTimeout(timeout); }
+}
+
+function normalizeResult(url, result) {
+  if (!result || result.url !== url || !PhishGuardRisk.validScore(result.final_score) ||
+      !PhishGuardRisk.validScore(result.url_risk) ||
+      ![result.nlp_risk, result.dom_risk].every(score => score === null || PhishGuardRisk.validScore(score)) ||
+      !result.detectors || typeof result.should_block !== 'boolean' || typeof result.analysis_stage !== "string" || !Array.isArray(result.explanations)) {
+    throw new Error("Malformed analysis response");
+  }
+  return {url, timestamp: Date.now(), riskScore: result.final_score, finalScore: result.final_score,
+    riskLevel: PhishGuardRisk.level(result.final_score, result.degraded),
+    isPhishing: result.final_score > 70, shouldBlock: result.should_block === true,
+    confidence: result.confidence, features: result.features || {}, explanations: result.explanations,
+    explanation: result.explanation || "Analysis complete", urlRisk: result.url_risk,
+    nlpRisk: result.nlp_risk, domRisk: result.dom_risk, analysisStage: result.analysis_stage,
+    detectors: result.detectors, degraded: Boolean(result.degraded), errors: result.errors || [],
+    suspicious_phrases: result.suspicious_phrases || [], apiResponse: true};
+}
 
 // ============================================================================
 // Initialization
@@ -54,149 +135,90 @@ async function initializeSettings() {
 }
 
 // ============================================================================
-// Navigation Interception - BEFORE page loads
+// Navigation notification and asynchronous warning redirect
 // ============================================================================
 
-chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
-  // Only intercept main frame navigation
-  if (details.frameId !== 0) return;
-
+chrome.webNavigation.onBeforeNavigate.addListener(async details => {
+  if (details.frameId !== 0 || !PhishGuardRisk.httpUrl(details.url)) return;
   const url = details.url;
-  console.log("[PhishGuard] Intercepting navigation:", url);
-
-  // Skip internal pages
-  if (
-    url.startsWith("chrome://") ||
-    url.startsWith("chrome-extension://") ||
-    url.startsWith("about:") ||
-    url.startsWith("edge://")
-  ) {
-    return;
-  }
-
-  // Check if user bypassed this URL
-  if (state.bypassedUrls.has(url)) {
-    console.log("[PhishGuard] URL was bypassed by user, allowing");
-    return;
-  }
-
-  // Check cache first
-  const cached = getCachedAnalysis(url);
-  if (cached && cached.riskScore < CONFIG.BLOCK_THRESHOLD) {
-    console.log("[PhishGuard] Cached safe URL, allowing");
-    return;
-  }
-
-  // Analyze URL before allowing
+  const navigation = {url, id: crypto.randomUUID()};
+  state.navigation.set(details.tabId, navigation);
+  state.analysisCache.delete(details.tabId);
+  state.pendingRequests.delete(details.tabId);
   try {
+    await ready;
+    if (!state.settings.enabled || isBypassed(url)) return;
     const result = await analyzeUrlQuick(url);
-
-    // Cache the result
-    cacheAnalysis(url, result);
-    state.analysisCache.set(details.tabId, result);
-
-    // Update stats
-    await updateScanStats(result.riskScore >= CONFIG.BLOCK_THRESHOLD);
-
-    // Block if high risk
-    if (result.riskScore >= CONFIG.BLOCK_THRESHOLD) {
-      console.log("[PhishGuard] HIGH RISK URL DETECTED:", result.riskScore);
-
-      // Redirect to warning page
-      const warningUrl = buildWarningUrl(url, result);
-
-      chrome.tabs.update(details.tabId, { url: warningUrl });
+    if (state.navigation.get(details.tabId) !== navigation || !await tabMatches(details.tabId, url)) return;
+    // Do not replace a newer content result with this slower URL-only result.
+    if (!state.analysisCache.has(details.tabId)) state.analysisCache.set(details.tabId, result);
+    await updateScanStats(result.shouldBlock);
+    if (result.shouldBlock && !isBypassed(url) && state.navigation.get(details.tabId) === navigation && await tabMatches(details.tabId, url)) {
+      await chrome.tabs.update(details.tabId, {url: buildWarningUrl(url, result)});
     }
-  } catch (error) {
-    console.error("[PhishGuard] Analysis error:", error.message);
-    // On error, allow navigation but log it
-  }
+  } catch (error) { console.warn("[PhishGuard] Navigation analysis unavailable:", error.message); }
+});
+
+async function tabMatches(tabId, url) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    return (tab.pendingUrl || tab.url) === url;
+  } catch { return false; }
+}
+
+chrome.webNavigation.onHistoryStateUpdated.addListener(async details => {
+  if (details.frameId !== 0 || !PhishGuardRisk.httpUrl(details.url)) return;
+  state.navigation.set(details.tabId, {url: details.url, id: crypto.randomUUID()});
+  state.analysisCache.delete(details.tabId);
+  state.pendingRequests.delete(details.tabId);
+  try { await chrome.tabs.sendMessage(details.tabId, {type: "RESCAN_PAGE", forceRefresh: true}); } catch {}
 });
 
 // Clean up when tab closes
 chrome.tabs.onRemoved.addListener((tabId) => {
   state.analysisCache.delete(tabId);
   state.pendingRequests.delete(tabId);
+  state.navigation.delete(tabId);
 });
 
 // ============================================================================
 // Quick URL Analysis (Fast, URL-only)
 // ============================================================================
 
-async function analyzeUrlQuick(url) {
-  // Check cache first
-  const cached = getCachedAnalysis(url);
-  if (cached) {
-    console.log("[PhishGuard] Returning cached analysis for:", url);
-    return cached;
-  }
-
-  console.log("[PhishGuard] Quick URL analysis:", url);
-
+async function analyzeUrlQuick(url, forceRefresh = false) {
+  await ready;
+  if (!PhishGuardRisk.httpUrl(url)) throw new Error("Unsupported URL");
+  const cached = forceRefresh ? null : getCachedAnalysis(url);
+  if (cached) return cached;
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), CONFIG.API_TIMEOUT);
-
-    const response = await fetch(CONFIG.API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        url: url,
-        text: "",
-        dom: {},
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-
-    const result = await response.json();
-    console.log("[PhishGuard] API result:", result);
-
-    return {
-      url,
-      timestamp: Date.now(),
-      riskScore: result.url_risk ?? result.final_score ?? 0,
-      riskLevel: result.risk_level ?? getRiskLevel(result.url_risk ?? 0),
-      isPhishing: result.is_phishing ?? false,
-      confidence: result.confidence ?? 0.75,
-      features: result.features ?? {},
-      explanations: result.explanations ?? [],
-      explanation: result.explanations?.[0]?.message ?? "Analysis complete",
-      urlRisk: result.url_risk ?? 0,
-      nlpRisk: result.nlp_risk ?? 0,
-      domRisk: result.dom_risk ?? 0,
-      finalScore: result.final_score ?? 0,
-      apiResponse: true,
-    };
+    const result = normalizeResult(url, await requestApi({url, text: "", dom: {}, force_refresh: forceRefresh}));
+    if (!result.degraded) cacheAnalysis(url, result);
+    return result;
   } catch (error) {
-    console.error("[PhishGuard] API failed, using fallback:", error.message);
-    return fallbackUrlAnalysis(url);
+    console.warn("[PhishGuard] URL check degraded:", error.message);
+    return fallbackUrlAnalysis(url, error.message);
   }
 }
 
-function fallbackUrlAnalysis(url) {
+function fallbackUrlAnalysis(url, reason = "API unavailable") {
   const riskScore = calculateUrlRisk(url);
   return {
     url,
     timestamp: Date.now(),
     riskScore,
-    riskLevel: getRiskLevel(riskScore),
+    riskLevel: PhishGuardRisk.level(riskScore, true),
     isPhishing: riskScore > 70,
-    confidence: 0.5,
+    confidence: null,
+    shouldBlock: PhishGuardRisk.shouldBlock(riskScore, riskScore),
+    degraded: true,
+    analysisStage: "url_only",
+    detectors: {url: {status: "failed", source: "heuristic_fallback"}, nlp: {status: "not_run"}, dom: {status: "not_run"}},
     features: extractUrlFeatures(url),
     explanations: [],
-    explanation: "Heuristic analysis (API unavailable)",
+    explanation: `Reduced protection: URL heuristics only. ${reason}`,
     urlRisk: riskScore,
-    nlpRisk: 0,
-    domRisk: 0,
+    nlpRisk: null,
+    domRisk: null,
     finalScore: riskScore,
     apiResponse: false,
   };
@@ -266,6 +288,7 @@ function buildWarningUrl(targetUrl, analysis) {
 
   // Build reasons string
   const reasons = [];
+  if (analysis.degraded) reasons.push(analysis.explanation || 'Reduced protection: URL heuristics only');
   if (analysis.explanations && analysis.explanations.length > 0) {
     analysis.explanations.forEach((exp) => {
       if (exp.type === "danger" || exp.type === "warning") {
@@ -283,7 +306,8 @@ function buildWarningUrl(targetUrl, analysis) {
 
   const params = new URLSearchParams({
     url: targetUrl,
-    score: analysis.riskScore.toString(),
+    score: String(analysis.finalScore > 70 ? analysis.finalScore : analysis.urlRisk),
+    basis: analysis.analysisStage !== "url_only" && analysis.finalScore > 70 ? "combined" : "url",
     level: analysis.riskLevel,
     reasons: reasons.slice(0, 5).join("|"),
   });
@@ -296,7 +320,7 @@ function buildWarningUrl(targetUrl, analysis) {
 // ============================================================================
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("[PhishGuard] Message received:", message.type);
+
 
   handleMessage(message, sender)
     .then(sendResponse)
@@ -309,177 +333,106 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 });
 
 async function handleMessage(message, sender) {
+  await ready;
+  if (sender.id !== chrome.runtime.id) return {error: "Untrusted sender"};
+  const privileged = trustedPage(sender);
+  const fromPage = sender.tab && PhishGuardRisk.httpUrl(sender.url);
+  if (!privileged && !fromPage) return {error: "Untrusted context"};
   switch (message.type) {
-    case "BYPASS_WARNING":
-      return handleBypassWarning(message.url);
-
+    case "BYPASS_WARNING": {
+      const url = PhishGuardRisk.httpUrl(message.url);
+      const warningTarget = privileged && sender.url?.startsWith(chrome.runtime.getURL("warning/warning.html"))
+        ? new URL(sender.url).searchParams.get("url") : null;
+      if (!url || (!privileged && sender.url !== url) || (warningTarget && warningTarget !== url)) return {error: "Invalid bypass target"};
+      return handleBypassWarning(url);
+    }
     case "CHECK_BYPASS":
-      return { bypassed: state.bypassedUrls.has(message.url) };
-
+      return {bypassed: isBypassed(privileged ? message.url : sender.url), enabled: state.settings.enabled};
     case "ANALYZE_PAGE_DATA":
-      return await handleAnalyzePageData(message.data, sender.tab?.id);
-
+      if (!fromPage || message.data?.url !== sender.url) return {error: "Page URL mismatch"};
+      return handleAnalyzePageData(message.data, sender.tab.id, message.forceRefresh === true);
     case "GET_CURRENT_ANALYSIS":
-      return handleGetCurrentAnalysis(sender.tab?.id);
-
-    case "ANALYZE_URL":
-      return await analyzeUrlQuick(message.url);
-
+      return handleGetCurrentAnalysis(privileged ? message.tabId : sender.tab.id);
+    case "ANALYZE_URL": {
+      const url = privileged ? message.url : sender.url;
+      if (!PhishGuardRisk.httpUrl(url)) return {error: "Unsupported URL"};
+      return analyzeUrlQuick(url, message.forceRefresh === true);
+    }
     case "GET_STATS":
-      return await getStats();
-
+      return privileged ? getStats() : {error: "Not authorized"};
     case "GET_SETTINGS":
-      return await getSettings();
-
+      return getSettings(); // Never returns the API token, including to content scripts.
     case "UPDATE_SETTINGS":
-      return await updateSettings(message.settings);
-
+      return privileged ? updateSettings(message.settings) : {error: "Not authorized"};
+    case "TEST_CONNECTION":
+      if (!privileged) return {error: "Not authorized"};
+      return requestApi(null, CONFIG.API_TIMEOUT, new URL("status", CONFIG.API_ENDPOINT).href);
     default:
-      return { error: "Unknown message type" };
+      return {error: "Unknown message type"};
   }
 }
 
-function handleBypassWarning(url) {
-  console.log("[PhishGuard] User bypassing warning for:", url);
+function isBypassed(url) {
+  if ((state.bypassExpiries[url] || 0) > Date.now()) return true;
+  delete state.bypassExpiries[url];
+  state.bypassedUrls.delete(url);
+  return false;
+}
+
+async function handleBypassWarning(url) {
+  if (!PhishGuardRisk.httpUrl(url)) return {error: "Unsupported URL"};
+  for (const target of Object.keys(state.bypassExpiries)) isBypassed(target);
+  state.bypassExpiries[url] = Date.now() + 30 * 60 * 1000;
   state.bypassedUrls.add(url);
-
-  // Clear bypass after 30 minutes
-  setTimeout(
-    () => {
-      state.bypassedUrls.delete(url);
-    },
-    30 * 60 * 1000,
-  );
-
-  return { success: true };
+  const entries = Object.entries(state.bypassExpiries).sort((a,b) => b[1]-a[1]).slice(0,100);
+  state.bypassExpiries = Object.fromEntries(entries);
+  state.bypassedUrls = new Set(entries.map(([target]) => target));
+  await chrome.storage.session.set({bypassExpiries: state.bypassExpiries});
+  return {success: true};
 }
 
 // ============================================================================
 // Full Page Analysis (After page loads, includes NLP)
 // ============================================================================
 
-async function handleAnalyzePageData(pageData, tabId) {
-  if (!pageData || !pageData.url) {
-    return { error: "Invalid page data" };
-  }
-
-  const urlString =
-    typeof pageData.url === "object" ? pageData.url.full : pageData.url;
-
-  // Skip internal pages
-  if (
-    urlString.startsWith("chrome://") ||
-    urlString.startsWith("chrome-extension://")
-  ) {
-    return createSafeResult(urlString, "System page");
-  }
-
+async function handleAnalyzePageData(pageData, tabId, forceRefresh = false) {
+  await ready;
+  if (!pageData || !PhishGuardRisk.httpUrl(pageData.url)) return {error: "Invalid page data"};
+  const url = pageData.url;
+  const requestId = crypto.randomUUID();
+  state.pendingRequests.set(tabId, requestId);
+  let analysis;
   try {
-    console.log("[PhishGuard] Full page analysis with NLP:", urlString);
-
-    const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      CONFIG.API_TIMEOUT * 2,
-    );
-
-    const response = await fetch(CONFIG.API_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        url: urlString,
-        text: pageData.visibleText || "",
-        dom: pageData.domFingerprint || {},
-      }),
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      throw new Error(`API returned ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    const analysis = {
-      url: urlString,
-      timestamp: Date.now(),
-      riskScore: result.url_risk ?? result.final_score ?? 0,
-      riskLevel: result.risk_level ?? "unknown",
-      isPhishing: result.is_phishing ?? false,
-      confidence: result.confidence ?? 0.75,
-      features: result.features ?? {},
-      explanations: result.explanations ?? [],
-      explanation: result.explanations?.[0]?.message ?? "Analysis complete",
-      urlRisk: result.url_risk ?? 0,
-      nlpRisk: result.nlp_risk ?? 0,
-      domRisk: result.dom_risk ?? 0,
-      finalScore: result.final_score ?? 0,
-      apiResponse: true,
-    };
-
-    // Cache and store
-    cacheAnalysis(urlString, analysis);
-    if (tabId) {
-      state.analysisCache.set(tabId, analysis);
-    }
-
-    // Notify content script
-    if (tabId) {
-      try {
-        await chrome.tabs.sendMessage(tabId, {
-          type: "ANALYSIS_RESULT",
-          data: analysis,
-        });
-      } catch (e) {
-        console.log("[PhishGuard] Could not notify content script");
-      }
-    }
-
-    return analysis;
+    analysis = normalizeResult(url, await requestApi({url, text: pageData.visibleText || "",
+      dom: pageData.domFingerprint || {}, force_refresh: forceRefresh}, CONFIG.CONTENT_TIMEOUT));
   } catch (error) {
-    console.error("[PhishGuard] Full analysis failed:", error.message);
-    return fallbackUrlAnalysis(urlString);
+    console.warn("[PhishGuard] Page check degraded:", error.message);
+    analysis = fallbackUrlAnalysis(url, error.message);
   }
+  if (state.pendingRequests.get(tabId) !== requestId || !await tabMatches(tabId, url)) return {error: "Stale page analysis discarded"};
+  state.pendingRequests.delete(tabId);
+  state.analysisCache.set(tabId, analysis);
+  // Full-page results never enter the separate URL-only cache.
+  try { await chrome.tabs.sendMessage(tabId, {type: "ANALYSIS_RESULT", data: analysis}); } catch {}
+  if (analysis.shouldBlock && !isBypassed(url) && await tabMatches(tabId, url)) {
+    await chrome.tabs.update(tabId, {url: buildWarningUrl(url, analysis)});
+  }
+  return analysis;
 }
 
 // ============================================================================
 // Helper Functions
 // ============================================================================
 
-function createSafeResult(url, reason) {
-  return {
-    url,
-    timestamp: Date.now(),
-    riskScore: 0,
-    riskLevel: "safe",
-    isPhishing: false,
-    confidence: 1.0,
-    features: {},
-    explanations: [],
-    explanation: reason,
-    urlRisk: 0,
-    nlpRisk: 0,
-    domRisk: 0,
-    finalScore: 0,
-  };
-}
-
-function getRiskLevel(score) {
-  if (score < 20) return "safe";
-  if (score < 40) return "low";
-  if (score < 60) return "medium";
-  if (score < 80) return "high";
-  return "critical";
-}
-
-function handleGetCurrentAnalysis(tabId) {
-  if (!tabId) return { error: "No tab ID" };
-  return state.analysisCache.get(tabId) || { error: "No analysis available" };
+async function handleGetCurrentAnalysis(tabId) {
+  if (!Number.isInteger(tabId)) return {error: "No tab ID"};
+  const result = state.analysisCache.get(tabId);
+  // Short-lived fallback remains visible, then the popup retries full detection.
+  if (!result || Date.now()-result.timestamp >= (result.degraded ? 5000 : CONFIG.CACHE_TTL) || !await tabMatches(tabId, result.url)) {
+    state.analysisCache.delete(tabId);
+    return {error: "No current analysis available"};
+  }
+  return result;
 }
 
 // ============================================================================
@@ -491,6 +444,8 @@ const urlCache = new Map();
 function getCachedAnalysis(url) {
   const cached = urlCache.get(url);
   if (cached && Date.now() - cached.timestamp < CONFIG.CACHE_TTL) {
+    urlCache.delete(url);
+    urlCache.set(url, cached);
     return cached.data;
   }
   urlCache.delete(url);
@@ -500,20 +455,19 @@ function getCachedAnalysis(url) {
 function cacheAnalysis(url, data) {
   urlCache.set(url, { data, timestamp: Date.now() });
 
-  // Clean old entries
-  if (urlCache.size > 100) {
-    const oldest = [...urlCache.entries()]
-      .sort((a, b) => a[1].timestamp - b[1].timestamp)
-      .slice(0, 20);
-    oldest.forEach(([k]) => urlCache.delete(k));
-  }
+  while (urlCache.size > 100) urlCache.delete(urlCache.keys().next().value);
 }
 
 // ============================================================================
 // Statistics
 // ============================================================================
 
-async function updateScanStats(isBlocked) {
+let statsQueue = Promise.resolve();
+function updateScanStats(isBlocked) {
+  statsQueue = statsQueue.catch(() => {}).then(() => writeScanStats(isBlocked));
+  return statsQueue;
+}
+async function writeScanStats(isBlocked) {
   const data = await chrome.storage.local.get(["totalScans", "threatsBlocked"]);
   await chrome.storage.local.set({
     totalScans: (data.totalScans || 0) + 1,
@@ -532,17 +486,26 @@ async function getStats() {
 }
 
 async function getSettings() {
-  const data = await chrome.storage.local.get(["enabled", "apiEndpoint"]);
-  return {
-    enabled: data.enabled ?? true,
-    apiEndpoint: data.apiEndpoint ?? CONFIG.API_ENDPOINT,
-  };
+  const data = await chrome.storage.local.get(["enabled", "apiEndpoint", "nlpHighlightingEnabled"]);
+  return {enabled: data.enabled ?? true, apiEndpoint: data.apiEndpoint ?? CONFIG.API_ENDPOINT,
+    nlpHighlightingEnabled: data.nlpHighlightingEnabled !== false, paired: Boolean(state.settings.apiToken)};
 }
 
-async function updateSettings(newSettings) {
-  await chrome.storage.local.set(newSettings);
-  if (newSettings.apiEndpoint) {
-    CONFIG.API_ENDPOINT = newSettings.apiEndpoint;
+async function updateSettings(settings) {
+  if (!settings || typeof settings !== "object") throw new Error("Invalid settings");
+  const allowed = ["enabled", "apiEndpoint", "apiToken", "nlpHighlightingEnabled"];
+  if (Object.keys(settings).some(key => !allowed.includes(key))) throw new Error("Unknown setting");
+  if (settings.apiEndpoint !== undefined && !validEndpoint(settings.apiEndpoint)) throw new Error("Only a loopback HTTP /api/analyze endpoint is allowed");
+  if (settings.apiToken !== undefined && (typeof settings.apiToken !== "string" || !/^[A-Za-z0-9_-]{32,256}$/.test(settings.apiToken))) throw new Error("Token must be 32-256 letters, digits, underscores or hyphens");
+  for (const key of ["enabled", "nlpHighlightingEnabled"]) {
+    if (settings[key] !== undefined && typeof settings[key] !== "boolean") throw new Error("Invalid boolean setting");
   }
-  return { success: true };
+  if (settings.apiToken !== undefined) await tokenStore('put', settings.apiToken);
+  const {apiToken, ...publicSettings} = settings;
+  await chrome.storage.local.set(publicSettings);
+  state.settings = {...state.settings, ...settings};
+  if (settings.apiEndpoint) CONFIG.API_ENDPOINT = settings.apiEndpoint;
+  urlCache.clear();
+  state.analysisCache.clear();
+  return {success: true};
 }

@@ -1,0 +1,1392 @@
+<!doctype html><meta charset="utf-8"><title>PhishGuard repaired main verification</title><style>body{font:16px system-ui;margin:40px;max-width:1100px}pre{white-space:pre-wrap;background:#f4f5f7;padding:24px}img{max-width:495px}</style><h1>Repaired main: 25/25 verified</h1><p>Actual visible Chrome MV3 extension; normal backend/run.py, real models, native popup.</p><p>The unchanged URL model still falsely flags localhost; these are functional checks.</p><img src="native-popup.png" alt="Actual tested popup"><pre>{
+  &quot;checks&quot;: [
+    {
+      &quot;name&quot;: &quot;Original run.py backend starts and health responds&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;status&quot;: 200,
+        &quot;body&quot;: {
+          &quot;service&quot;: &quot;phishguard-api&quot;,
+          &quot;status&quot;: &quot;healthy&quot;
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Standard startup activates trained-model pipeline&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;status&quot;: 200,
+        &quot;body&quot;: {
+          &quot;analysis_mode&quot;: &quot;url_nlp_dom&quot;,
+          &quot;cache&quot;: {
+            &quot;evictions&quot;: 0,
+            &quot;hits&quot;: 0,
+            &quot;maxsize&quot;: 512,
+            &quot;misses&quot;: 0,
+            &quot;size&quot;: 0,
+            &quot;ttl_seconds&quot;: 86400
+          },
+          &quot;capabilities&quot;: {
+            &quot;dom_analysis&quot;: true,
+            &quot;ml_inference&quot;: true,
+            &quot;nlp_analysis&quot;: true,
+            &quot;url_analysis&quot;: true
+          },
+          &quot;model_loaded&quot;: true,
+          &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+          &quot;models&quot;: {
+            &quot;nlp&quot;: &quot;loaded&quot;,
+            &quot;url&quot;: &quot;loaded&quot;
+          },
+          &quot;status&quot;: &quot;operational&quot;,
+          &quot;version&quot;: &quot;1.1.0&quot;
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;API info endpoint&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;status&quot;: 200,
+        &quot;body&quot;: {
+          &quot;description&quot;: &quot;Real-time phishing detection API&quot;,
+          &quot;endpoints&quot;: {
+            &quot;GET /api/info&quot;: &quot;Get API information&quot;,
+            &quot;GET /api/status&quot;: &quot;Get API status&quot;,
+            &quot;GET /health&quot;: &quot;Health check&quot;,
+            &quot;POST /api/analyze&quot;: &quot;Analyze URL, text, and DOM&quot;,
+            &quot;POST /api/batch&quot;: &quot;Batch analyze multiple URLs&quot;
+          },
+          &quot;name&quot;: &quot;PhishGuard API&quot;,
+          &quot;version&quot;: &quot;1.0.0&quot;
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Batch URL analysis and missing-field handling&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;status&quot;: 200,
+        &quot;body&quot;: {
+          &quot;results&quot;: [
+            {
+              &quot;analysis_stage&quot;: &quot;url_only&quot;,
+              &quot;breakdown&quot;: {
+                &quot;dom&quot;: null,
+                &quot;nlp&quot;: null,
+                &quot;url&quot;: 99
+              },
+              &quot;cached&quot;: false,
+              &quot;confidence&quot;: null,
+              &quot;degraded&quot;: false,
+              &quot;detectors&quot;: {
+                &quot;dom&quot;: {
+                  &quot;source&quot;: null,
+                  &quot;status&quot;: &quot;not_run&quot;
+                },
+                &quot;nlp&quot;: {
+                  &quot;source&quot;: null,
+                  &quot;status&quot;: &quot;not_run&quot;
+                },
+                &quot;url&quot;: {
+                  &quot;source&quot;: &quot;model&quot;,
+                  &quot;status&quot;: &quot;ok&quot;
+                }
+              },
+              &quot;dom_risk&quot;: null,
+              &quot;errors&quot;: [],
+              &quot;explanation&quot;: &quot;URL model and URL indicators produced risk score 99/100&quot;,
+              &quot;explanations&quot;: [
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;URL model and URL indicators produced risk score 99/100&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Deep URL path (+5.61)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Deep URL path structure (+1.16)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Lack of secure HTTPS connection (+1.07)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Many hyphens in URL (+0.30)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Long query string (+0.27)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                }
+              ],
+              &quot;features&quot;: {
+                &quot;hostname&quot;: &quot;example.com&quot;,
+                &quot;protocol&quot;: &quot;https:&quot;,
+                &quot;riskFactors&quot;: [],
+                &quot;safeFactors&quot;: [
+                  &quot;secure_connection&quot;
+                ]
+              },
+              &quot;final_score&quot;: 99,
+              &quot;form_keywords&quot;: [],
+              &quot;is_phishing&quot;: true,
+              &quot;level&quot;: &quot;dangerous&quot;,
+              &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+              &quot;nlp_risk&quot;: null,
+              &quot;policy_version&quot;: &quot;phase1-v1&quot;,
+              &quot;reasons&quot;: [
+                &quot;URL model and URL indicators produced risk score 99/100&quot;,
+                &quot;ML Model: Deep URL path (+5.61)&quot;,
+                &quot;ML Model: Deep URL path structure (+1.16)&quot;,
+                &quot;ML Model: Lack of secure HTTPS connection (+1.07)&quot;,
+                &quot;ML Model: Many hyphens in URL (+0.30)&quot;,
+                &quot;ML Model: Long query string (+0.27)&quot;
+              ],
+              &quot;response_time_ms&quot;: 0,
+              &quot;risk_level&quot;: &quot;dangerous&quot;,
+              &quot;risk_score&quot;: 99,
+              &quot;should_block&quot;: true,
+              &quot;suspicious_phrases&quot;: [],
+              &quot;url&quot;: &quot;https://example.com&quot;,
+              &quot;url_risk&quot;: 99
+            },
+            {
+              &quot;analysis_stage&quot;: &quot;url_only&quot;,
+              &quot;breakdown&quot;: {
+                &quot;dom&quot;: null,
+                &quot;nlp&quot;: null,
+                &quot;url&quot;: 100
+              },
+              &quot;cached&quot;: false,
+              &quot;confidence&quot;: null,
+              &quot;degraded&quot;: false,
+              &quot;detectors&quot;: {
+                &quot;dom&quot;: {
+                  &quot;source&quot;: null,
+                  &quot;status&quot;: &quot;not_run&quot;
+                },
+                &quot;nlp&quot;: {
+                  &quot;source&quot;: null,
+                  &quot;status&quot;: &quot;not_run&quot;
+                },
+                &quot;url&quot;: {
+                  &quot;source&quot;: &quot;model&quot;,
+                  &quot;status&quot;: &quot;ok&quot;
+                }
+              },
+              &quot;dom_risk&quot;: null,
+              &quot;errors&quot;: [],
+              &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+              &quot;explanations&quot;: [
+                {
+                  &quot;category&quot;: &quot;url&quot;,
+                  &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+                  &quot;type&quot;: &quot;warning&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;url&quot;,
+                  &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Many path segments (+1.59)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Long query string (+0.73)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                },
+                {
+                  &quot;category&quot;: &quot;ml&quot;,
+                  &quot;message&quot;: &quot;ML Model: Deep URL path (+0.33)&quot;,
+                  &quot;type&quot;: &quot;danger&quot;
+                }
+              ],
+              &quot;features&quot;: {
+                &quot;hostname&quot;: &quot;verify-paypal-account-security.xyz&quot;,
+                &quot;protocol&quot;: &quot;http:&quot;,
+                &quot;riskFactors&quot;: [
+                  &quot;insecure_http&quot;,
+                  &quot;suspicious_tld&quot;
+                ],
+                &quot;safeFactors&quot;: []
+              },
+              &quot;final_score&quot;: 100,
+              &quot;form_keywords&quot;: [],
+              &quot;is_phishing&quot;: true,
+              &quot;level&quot;: &quot;dangerous&quot;,
+              &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+              &quot;nlp_risk&quot;: null,
+              &quot;policy_version&quot;: &quot;phase1-v1&quot;,
+              &quot;reasons&quot;: [
+                &quot;Site uses insecure HTTP connection&quot;,
+                &quot;Uses high-risk domain extension (.xyz)&quot;,
+                &quot;URL model and URL indicators produced risk score 100/100&quot;,
+                &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+                &quot;ML Model: Many path segments (+1.59)&quot;,
+                &quot;ML Model: Long query string (+0.73)&quot;,
+                &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+                &quot;ML Model: Deep URL path (+0.33)&quot;
+              ],
+              &quot;response_time_ms&quot;: 0,
+              &quot;risk_level&quot;: &quot;dangerous&quot;,
+              &quot;risk_score&quot;: 100,
+              &quot;should_block&quot;: true,
+              &quot;suspicious_phrases&quot;: [],
+              &quot;url&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+              &quot;url_risk&quot;: 100
+            }
+          ]
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;API rejects invalid schemes&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;API rejects unauthenticated analysis requests&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Actual unpacked MV3 extension starts and pairs through options&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;worker&quot;: &quot;chrome-extension://maanhamgemmnljjhjjlpacgnncandpie/background/background.js&quot;,
+        &quot;browser&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36&quot;,
+        &quot;mode&quot;: &quot;headed&quot;
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Benign local navigation and content-script request&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://fixture.github.com:8766/benign&quot;,
+        &quot;timestamp&quot;: 1793082158489,
+        &quot;riskScore&quot;: 7,
+        &quot;finalScore&quot;: 7,
+        &quot;riskLevel&quot;: &quot;safe&quot;,
+        &quot;isPhishing&quot;: false,
+        &quot;shouldBlock&quot;: false,
+        &quot;confidence&quot;: null,
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;fixture.github.com&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;
+          ],
+          &quot;safeFactors&quot;: [
+            &quot;known_safe_domain&quot;
+          ]
+        },
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;This is a known trusted domain&quot;,
+            &quot;type&quot;: &quot;safe&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Community Library...&#x27; (+0.99)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;urlRisk&quot;: 25,
+        &quot;nlpRisk&quot;: 0,
+        &quot;domRisk&quot;: 0,
+        &quot;analysisStage&quot;: &quot;full&quot;,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;degraded&quot;: false,
+        &quot;errors&quot;: [],
+        &quot;suspicious_phrases&quot;: [],
+        &quot;apiResponse&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Online phishing warning and preserved backend risk score&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;score&quot;: 100
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Online full NLP/DOM scoring available after explicit Proceed&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+        &quot;timestamp&quot;: 1793082163176,
+        &quot;riskScore&quot;: 90,
+        &quot;finalScore&quot;: 90,
+        &quot;riskLevel&quot;: &quot;dangerous&quot;,
+        &quot;isPhishing&quot;: true,
+        &quot;shouldBlock&quot;: true,
+        &quot;confidence&quot;: null,
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;verify-paypal-account-security.xyz&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;,
+            &quot;suspicious_tld&quot;
+          ],
+          &quot;safeFactors&quot;: []
+        },
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Confirm your identity...&#x27; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Dummy email...&#x27; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Verify your account immediately...&#x27; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Dummy password...&#x27; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Demonstration only...&#x27; (+0.99)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Found 5 suspicious phrase(s): urgent, immediately, within 24 hours&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Page requests sensitive info: password&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP model and text indicators produced risk score 76/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Page structure matches PAYPAL (83.9% similar) but domain is different!&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Login form detected on suspicious domain&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many path segments (+1.59)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Long query string (+0.73)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path (+0.33)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;urlRisk&quot;: 100,
+        &quot;nlpRisk&quot;: 76,
+        &quot;domRisk&quot;: 91,
+        &quot;analysisStage&quot;: &quot;full&quot;,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;degraded&quot;: false,
+        &quot;errors&quot;: [],
+        &quot;suspicious_phrases&quot;: [
+          &quot;urgent&quot;,
+          &quot;immediately&quot;,
+          &quot;within 24 hours&quot;,
+          &quot;verify your account&quot;,
+          &quot;confirm your identity&quot;
+        ],
+        &quot;apiResponse&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Native popup displays correct URL, score, bars and badge&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;domain&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+        &quot;risk-score&quot;: &quot;90&quot;,
+        &quot;score-url&quot;: &quot;100%&quot;,
+        &quot;score-nlp&quot;: &quot;76%&quot;,
+        &quot;score-dom&quot;: &quot;91%&quot;,
+        &quot;risk-badge&quot;: &quot;DANGEROUS&quot;,
+        &quot;connection-status&quot;: &quot;Connected&quot;,
+        &quot;visual&quot;: {
+          &quot;badgeColor&quot;: &quot;rgb(239, 68, 68)&quot;,
+          &quot;gaugeColor&quot;: &quot;rgb(239, 68, 68)&quot;,
+          &quot;gaugeOffset&quot;: &quot;25.12px&quot;,
+          &quot;barWidthsPercent&quot;: [
+            100,
+            75.99126495871462,
+            90.9946279424313
+          ]
+        }
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Popup rescan requests fresh full-page analysis&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Initial phishing text highlighting&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;count&quot;: 5
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Highlight toggle off/on and saved setting&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Dynamically inserted suspicious paragraph highlighted&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Short dynamically inserted suspicious phrase highlighted&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Warning explanations render HTML as inert text&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Rapid navigation and redirects update current URL&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://fixture.github.com:8766/benign?redirected=1&quot;
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Offline heuristic warning appears with reduced-protection label&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Proceed Anyway bypass and reload&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;
+    },
+    {
+      &quot;name&quot;: &quot;Go Back to Safety action&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;destination&quot;: &quot;about:blank&quot;
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Offline safe page exposes reduced protection in popup&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;label&quot;: &quot;Reduced protection&quot;
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Backend recovery updates a fresh navigation&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;url&quot;: &quot;http://fixture.github.com:8766/benign?recovered=1&quot;,
+        &quot;timestamp&quot;: 1793082189734,
+        &quot;riskScore&quot;: 7,
+        &quot;finalScore&quot;: 7,
+        &quot;riskLevel&quot;: &quot;safe&quot;,
+        &quot;isPhishing&quot;: false,
+        &quot;shouldBlock&quot;: false,
+        &quot;confidence&quot;: null,
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;fixture.github.com&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;
+          ],
+          &quot;safeFactors&quot;: [
+            &quot;known_safe_domain&quot;
+          ]
+        },
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;This is a known trusted domain&quot;,
+            &quot;type&quot;: &quot;safe&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Community Library...&#x27; (+0.99)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;urlRisk&quot;: 25,
+        &quot;nlpRisk&quot;: 0,
+        &quot;domRisk&quot;: 0,
+        &quot;analysisStage&quot;: &quot;full&quot;,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;degraded&quot;: false,
+        &quot;errors&quot;: [],
+        &quot;suspicious_phrases&quot;: [],
+        &quot;apiResponse&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;Service-worker restart retains active temporary bypass&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;bypassed&quot;: true,
+        &quot;enabled&quot;: true
+      }
+    },
+    {
+      &quot;name&quot;: &quot;No uncaught page or unexpected worker errors&quot;,
+      &quot;status&quot;: &quot;VERIFIED&quot;,
+      &quot;detail&quot;: {
+        &quot;pageErrors&quot;: 0,
+        &quot;workerErrors&quot;: 0
+      }
+    }
+  ],
+  &quot;observations&quot;: {
+    &quot;status&quot;: {
+      &quot;status&quot;: 200,
+      &quot;body&quot;: {
+        &quot;analysis_mode&quot;: &quot;url_nlp_dom&quot;,
+        &quot;cache&quot;: {
+          &quot;evictions&quot;: 0,
+          &quot;hits&quot;: 0,
+          &quot;maxsize&quot;: 512,
+          &quot;misses&quot;: 0,
+          &quot;size&quot;: 0,
+          &quot;ttl_seconds&quot;: 86400
+        },
+        &quot;capabilities&quot;: {
+          &quot;dom_analysis&quot;: true,
+          &quot;ml_inference&quot;: true,
+          &quot;nlp_analysis&quot;: true,
+          &quot;url_analysis&quot;: true
+        },
+        &quot;model_loaded&quot;: true,
+        &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+        &quot;models&quot;: {
+          &quot;nlp&quot;: &quot;loaded&quot;,
+          &quot;url&quot;: &quot;loaded&quot;
+        },
+        &quot;status&quot;: &quot;operational&quot;,
+        &quot;version&quot;: &quot;1.1.0&quot;
+      }
+    },
+    &quot;rawPhishing&quot;: {
+      &quot;status&quot;: 200,
+      &quot;body&quot;: {
+        &quot;analysis_stage&quot;: &quot;url_only&quot;,
+        &quot;breakdown&quot;: {
+          &quot;dom&quot;: null,
+          &quot;nlp&quot;: null,
+          &quot;url&quot;: 100
+        },
+        &quot;cached&quot;: true,
+        &quot;confidence&quot;: null,
+        &quot;degraded&quot;: false,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: null,
+            &quot;status&quot;: &quot;not_run&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: null,
+            &quot;status&quot;: &quot;not_run&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;dom_risk&quot;: null,
+        &quot;errors&quot;: [],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many path segments (+1.59)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Long query string (+0.73)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path (+0.33)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;verify-paypal-account-security.xyz&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;,
+            &quot;suspicious_tld&quot;
+          ],
+          &quot;safeFactors&quot;: []
+        },
+        &quot;final_score&quot;: 100,
+        &quot;form_keywords&quot;: [],
+        &quot;is_phishing&quot;: true,
+        &quot;level&quot;: &quot;dangerous&quot;,
+        &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+        &quot;nlp_risk&quot;: null,
+        &quot;policy_version&quot;: &quot;phase1-v1&quot;,
+        &quot;reasons&quot;: [
+          &quot;Site uses insecure HTTP connection&quot;,
+          &quot;Uses high-risk domain extension (.xyz)&quot;,
+          &quot;URL model and URL indicators produced risk score 100/100&quot;,
+          &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+          &quot;ML Model: Many path segments (+1.59)&quot;,
+          &quot;ML Model: Long query string (+0.73)&quot;,
+          &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+          &quot;ML Model: Deep URL path (+0.33)&quot;
+        ],
+        &quot;response_time_ms&quot;: 0,
+        &quot;risk_level&quot;: &quot;dangerous&quot;,
+        &quot;risk_score&quot;: 100,
+        &quot;should_block&quot;: true,
+        &quot;suspicious_phrases&quot;: [],
+        &quot;url&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+        &quot;url_risk&quot;: 100
+      }
+    },
+    &quot;legacyPayload&quot;: {
+      &quot;status&quot;: 200,
+      &quot;body&quot;: {
+        &quot;analysis_stage&quot;: &quot;full&quot;,
+        &quot;breakdown&quot;: {
+          &quot;dom&quot;: 57,
+          &quot;nlp&quot;: 75,
+          &quot;url&quot;: 100
+        },
+        &quot;cached&quot;: false,
+        &quot;confidence&quot;: null,
+        &quot;degraded&quot;: false,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: &quot;similarity&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;dom_risk&quot;: 57,
+        &quot;errors&quot;: [],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Confirm your identity immediately...&#x27; (+1.00)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Enter your password...&#x27; (+0.88)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Found 3 suspicious phrase(s): immediately, confirm your identity, enter your password&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;content&quot;,
+            &quot;message&quot;: &quot;Page requests sensitive info: password&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;NLP model and text indicators produced risk score 75/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Page structure matches BANK (69.1% similar) but domain is different!&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;dom&quot;,
+            &quot;message&quot;: &quot;Login form detected on suspicious domain&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many path segments (+1.59)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Long query string (+0.73)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path (+0.33)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;verify-paypal-account-security.xyz&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;,
+            &quot;suspicious_tld&quot;
+          ],
+          &quot;safeFactors&quot;: []
+        },
+        &quot;final_score&quot;: 90,
+        &quot;form_keywords&quot;: [
+          &quot;password&quot;
+        ],
+        &quot;is_phishing&quot;: true,
+        &quot;level&quot;: &quot;dangerous&quot;,
+        &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+        &quot;nlp_risk&quot;: 75,
+        &quot;policy_version&quot;: &quot;phase1-v1&quot;,
+        &quot;reasons&quot;: [
+          &quot;Site uses insecure HTTP connection&quot;,
+          &quot;Uses high-risk domain extension (.xyz)&quot;,
+          &quot;URL model and URL indicators produced risk score 100/100&quot;,
+          &quot;NLP Model: Suspicious context: &#x27;Confirm your identity immediately...&#x27; (+1.00)&quot;,
+          &quot;NLP Model: Suspicious context: &#x27;Enter your password...&#x27; (+0.88)&quot;,
+          &quot;Found 3 suspicious phrase(s): immediately, confirm your identity, enter your password&quot;,
+          &quot;Page requests sensitive info: password&quot;,
+          &quot;NLP model and text indicators produced risk score 75/100&quot;,
+          &quot;Page structure matches BANK (69.1% similar) but domain is different!&quot;,
+          &quot;Login form detected on suspicious domain&quot;,
+          &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+          &quot;ML Model: Many path segments (+1.59)&quot;,
+          &quot;ML Model: Long query string (+0.73)&quot;,
+          &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+          &quot;ML Model: Deep URL path (+0.33)&quot;
+        ],
+        &quot;response_time_ms&quot;: 140,
+        &quot;risk_level&quot;: &quot;dangerous&quot;,
+        &quot;risk_score&quot;: 90,
+        &quot;should_block&quot;: true,
+        &quot;suspicious_phrases&quot;: [
+          &quot;immediately&quot;,
+          &quot;confirm your identity&quot;,
+          &quot;enter your password&quot;
+        ],
+        &quot;url&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+        &quot;url_risk&quot;: 100
+      }
+    },
+    &quot;localhostModelAccuracy&quot;: {
+      &quot;status&quot;: 200,
+      &quot;body&quot;: {
+        &quot;analysis_stage&quot;: &quot;url_only&quot;,
+        &quot;breakdown&quot;: {
+          &quot;dom&quot;: null,
+          &quot;nlp&quot;: null,
+          &quot;url&quot;: 100
+        },
+        &quot;cached&quot;: false,
+        &quot;confidence&quot;: null,
+        &quot;degraded&quot;: false,
+        &quot;detectors&quot;: {
+          &quot;dom&quot;: {
+            &quot;source&quot;: null,
+            &quot;status&quot;: &quot;not_run&quot;
+          },
+          &quot;nlp&quot;: {
+            &quot;source&quot;: null,
+            &quot;status&quot;: &quot;not_run&quot;
+          },
+          &quot;url&quot;: {
+            &quot;source&quot;: &quot;model&quot;,
+            &quot;status&quot;: &quot;ok&quot;
+          }
+        },
+        &quot;dom_risk&quot;: null,
+        &quot;errors&quot;: [],
+        &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+        &quot;explanations&quot;: [
+          {
+            &quot;category&quot;: &quot;url&quot;,
+            &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+            &quot;type&quot;: &quot;warning&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.61)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many path segments (+1.56)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Long query string (+0.86)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Deep URL path (+0.35)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          },
+          {
+            &quot;category&quot;: &quot;ml&quot;,
+            &quot;message&quot;: &quot;ML Model: Many hyphens in URL (+0.33)&quot;,
+            &quot;type&quot;: &quot;danger&quot;
+          }
+        ],
+        &quot;features&quot;: {
+          &quot;hostname&quot;: &quot;localhost&quot;,
+          &quot;protocol&quot;: &quot;http:&quot;,
+          &quot;riskFactors&quot;: [
+            &quot;insecure_http&quot;
+          ],
+          &quot;safeFactors&quot;: []
+        },
+        &quot;final_score&quot;: 100,
+        &quot;form_keywords&quot;: [],
+        &quot;is_phishing&quot;: true,
+        &quot;level&quot;: &quot;dangerous&quot;,
+        &quot;model_version&quot;: &quot;ac4e7f4009274776&quot;,
+        &quot;nlp_risk&quot;: null,
+        &quot;policy_version&quot;: &quot;phase1-v1&quot;,
+        &quot;reasons&quot;: [
+          &quot;Site uses insecure HTTP connection&quot;,
+          &quot;URL model and URL indicators produced risk score 100/100&quot;,
+          &quot;ML Model: Deep URL path structure (+3.61)&quot;,
+          &quot;ML Model: Many path segments (+1.56)&quot;,
+          &quot;ML Model: Long query string (+0.86)&quot;,
+          &quot;ML Model: Deep URL path (+0.35)&quot;,
+          &quot;ML Model: Many hyphens in URL (+0.33)&quot;
+        ],
+        &quot;response_time_ms&quot;: 15,
+        &quot;risk_level&quot;: &quot;dangerous&quot;,
+        &quot;risk_score&quot;: 100,
+        &quot;should_block&quot;: true,
+        &quot;suspicious_phrases&quot;: [],
+        &quot;url&quot;: &quot;http://localhost:8766/benign&quot;,
+        &quot;url_risk&quot;: 100
+      }
+    },
+    &quot;safe&quot;: {
+      &quot;url&quot;: &quot;http://fixture.github.com:8766/benign&quot;,
+      &quot;timestamp&quot;: 1793082158489,
+      &quot;riskScore&quot;: 7,
+      &quot;finalScore&quot;: 7,
+      &quot;riskLevel&quot;: &quot;safe&quot;,
+      &quot;isPhishing&quot;: false,
+      &quot;shouldBlock&quot;: false,
+      &quot;confidence&quot;: null,
+      &quot;features&quot;: {
+        &quot;hostname&quot;: &quot;fixture.github.com&quot;,
+        &quot;protocol&quot;: &quot;http:&quot;,
+        &quot;riskFactors&quot;: [
+          &quot;insecure_http&quot;
+        ],
+        &quot;safeFactors&quot;: [
+          &quot;known_safe_domain&quot;
+        ]
+      },
+      &quot;explanations&quot;: [
+        {
+          &quot;category&quot;: &quot;url&quot;,
+          &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+          &quot;type&quot;: &quot;warning&quot;
+        },
+        {
+          &quot;category&quot;: &quot;url&quot;,
+          &quot;message&quot;: &quot;This is a known trusted domain&quot;,
+          &quot;type&quot;: &quot;safe&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Community Library...&#x27; (+0.99)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        }
+      ],
+      &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+      &quot;urlRisk&quot;: 25,
+      &quot;nlpRisk&quot;: 0,
+      &quot;domRisk&quot;: 0,
+      &quot;analysisStage&quot;: &quot;full&quot;,
+      &quot;detectors&quot;: {
+        &quot;dom&quot;: {
+          &quot;source&quot;: &quot;similarity&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        },
+        &quot;nlp&quot;: {
+          &quot;source&quot;: &quot;model&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        },
+        &quot;url&quot;: {
+          &quot;source&quot;: &quot;model&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        }
+      },
+      &quot;degraded&quot;: false,
+      &quot;errors&quot;: [],
+      &quot;suspicious_phrases&quot;: [],
+      &quot;apiResponse&quot;: true
+    },
+    &quot;fullPhishing&quot;: {
+      &quot;url&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+      &quot;timestamp&quot;: 1793082163176,
+      &quot;riskScore&quot;: 90,
+      &quot;finalScore&quot;: 90,
+      &quot;riskLevel&quot;: &quot;dangerous&quot;,
+      &quot;isPhishing&quot;: true,
+      &quot;shouldBlock&quot;: true,
+      &quot;confidence&quot;: null,
+      &quot;features&quot;: {
+        &quot;hostname&quot;: &quot;verify-paypal-account-security.xyz&quot;,
+        &quot;protocol&quot;: &quot;http:&quot;,
+        &quot;riskFactors&quot;: [
+          &quot;insecure_http&quot;,
+          &quot;suspicious_tld&quot;
+        ],
+        &quot;safeFactors&quot;: []
+      },
+      &quot;explanations&quot;: [
+        {
+          &quot;category&quot;: &quot;url&quot;,
+          &quot;message&quot;: &quot;Site uses insecure HTTP connection&quot;,
+          &quot;type&quot;: &quot;warning&quot;
+        },
+        {
+          &quot;category&quot;: &quot;url&quot;,
+          &quot;message&quot;: &quot;Uses high-risk domain extension (.xyz)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;URL model and URL indicators produced risk score 100/100&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Confirm your identity...&#x27; (+1.00)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Dummy email...&#x27; (+1.00)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Verify your account immediately...&#x27; (+1.00)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Dummy password...&#x27; (+1.00)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP Model: Suspicious context: &#x27;Demonstration only...&#x27; (+0.99)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;content&quot;,
+          &quot;message&quot;: &quot;Found 5 suspicious phrase(s): urgent, immediately, within 24 hours&quot;,
+          &quot;type&quot;: &quot;warning&quot;
+        },
+        {
+          &quot;category&quot;: &quot;content&quot;,
+          &quot;message&quot;: &quot;Page requests sensitive info: password&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;NLP model and text indicators produced risk score 76/100&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;dom&quot;,
+          &quot;message&quot;: &quot;Page structure matches PAYPAL (83.9% similar) but domain is different!&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;dom&quot;,
+          &quot;message&quot;: &quot;Login form detected on suspicious domain&quot;,
+          &quot;type&quot;: &quot;warning&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;ML Model: Deep URL path structure (+3.69)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;ML Model: Many path segments (+1.59)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;ML Model: Long query string (+0.73)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;ML Model: High ratio of special characters (+0.34)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        },
+        {
+          &quot;category&quot;: &quot;ml&quot;,
+          &quot;message&quot;: &quot;ML Model: Deep URL path (+0.33)&quot;,
+          &quot;type&quot;: &quot;danger&quot;
+        }
+      ],
+      &quot;explanation&quot;: &quot;Site uses insecure HTTP connection&quot;,
+      &quot;urlRisk&quot;: 100,
+      &quot;nlpRisk&quot;: 76,
+      &quot;domRisk&quot;: 91,
+      &quot;analysisStage&quot;: &quot;full&quot;,
+      &quot;detectors&quot;: {
+        &quot;dom&quot;: {
+          &quot;source&quot;: &quot;similarity&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        },
+        &quot;nlp&quot;: {
+          &quot;source&quot;: &quot;model&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        },
+        &quot;url&quot;: {
+          &quot;source&quot;: &quot;model&quot;,
+          &quot;status&quot;: &quot;ok&quot;
+        }
+      },
+      &quot;degraded&quot;: false,
+      &quot;errors&quot;: [],
+      &quot;suspicious_phrases&quot;: [
+        &quot;urgent&quot;,
+        &quot;immediately&quot;,
+        &quot;within 24 hours&quot;,
+        &quot;verify your account&quot;,
+        &quot;confirm your identity&quot;
+      ],
+      &quot;apiResponse&quot;: true
+    },
+    &quot;popup&quot;: {
+      &quot;domain&quot;: &quot;http://verify-paypal-account-security.xyz:8766/login&quot;,
+      &quot;risk-score&quot;: &quot;90&quot;,
+      &quot;score-url&quot;: &quot;100%&quot;,
+      &quot;score-nlp&quot;: &quot;76%&quot;,
+      &quot;score-dom&quot;: &quot;91%&quot;,
+      &quot;risk-badge&quot;: &quot;DANGEROUS&quot;,
+      &quot;connection-status&quot;: &quot;Connected&quot;
+    },
+    &quot;popupVisual&quot;: {
+      &quot;badgeColor&quot;: &quot;rgb(239, 68, 68)&quot;,
+      &quot;gaugeColor&quot;: &quot;rgb(239, 68, 68)&quot;,
+      &quot;gaugeOffset&quot;: &quot;25.12px&quot;,
+      &quot;barWidthsPercent&quot;: [
+        100,
+        75.99126495871462,
+        90.9946279424313
+      ]
+    },
+    &quot;rescanRequests&quot;: [
+      {
+        &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+        &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:true}&quot;
+      }
+    ]
+  },
+  &quot;requests&quot;: [
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/status&quot;,
+      &quot;body&quot;: null
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:true}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nClicked\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nClicked\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nClicked\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\\n\\nverify your account\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nClicked\\n\\nUrgent! Verify your account immediately. Confirm your identity within 24 hours.\\n\\nverify your account\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?first=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?first=1\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/redirect\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?redirected=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?redirected=1\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?back=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?back=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?offline=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?offline=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?offline=1\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?recovered=1\&quot;,\&quot;text\&quot;:\&quot;\&quot;,\&quot;dom\&quot;:{},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://fixture.github.com:8766/benign?recovered=1\&quot;,\&quot;text\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:0,\&quot;inputs\&quot;:0,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[],\&quot;forms\&quot;:[],\&quot;title\&quot;:\&quot;Community Library\&quot;,\&quot;visibleText\&quot;:\&quot;Community Library\\n\\nBooks, gardening and weekend reading events for all local families.\\n\\nBrowse books\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    },
+    {
+      &quot;url&quot;: &quot;http://127.0.0.1:5000/api/analyze&quot;,
+      &quot;body&quot;: &quot;{\&quot;url\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;,\&quot;text\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;,\&quot;dom\&quot;:{\&quot;stats\&quot;:{\&quot;forms\&quot;:1,\&quot;inputs\&quot;:2,\&quot;links\&quot;:0,\&quot;scripts\&quot;:0,\&quot;iframes\&quot;:0},\&quot;inputs\&quot;:[{\&quot;type\&quot;:\&quot;email\&quot;,\&quot;name\&quot;:\&quot;email\&quot;,\&quot;id\&quot;:\&quot;\&quot;},{\&quot;type\&quot;:\&quot;password\&quot;,\&quot;name\&quot;:\&quot;password\&quot;,\&quot;id\&quot;:\&quot;\&quot;}],\&quot;forms\&quot;:[{\&quot;action\&quot;:\&quot;http://verify-paypal-account-security.xyz:8766/login?offline=1\&quot;}],\&quot;title\&quot;:\&quot;PayPal account verification\&quot;,\&quot;visibleText\&quot;:\&quot;PayPal account verification — local simulation\\n\\nUrgent! Verify your account immediately. Your account will be closed within 24 hours. Confirm your identity. Enter your password.\\n\\nDummy email\\nDummy password\\nDemonstration only\\n\\nNo credentials are collected or submitted.\&quot;},\&quot;force_refresh\&quot;:false}&quot;
+    }
+  ],
+  &quot;pageErrors&quot;: [],
+  &quot;workerErrors&quot;: [],
+  &quot;console&quot;: [],
+  &quot;popupTargets&quot;: [
+    {
+      &quot;type&quot;: &quot;page&quot;,
+      &quot;url&quot;: &quot;chrome-extension://maanhamgemmnljjhjjlpacgnncandpie/popup/popup.html&quot;
+    }
+  ],
+  &quot;popupMode&quot;: &quot;Native action popup inspected with Chrome DevTools Protocol; real mouse events&quot;,
+  &quot;finishedAt&quot;: &quot;2026-10-27T06:23:11.589Z&quot;
+}</pre>

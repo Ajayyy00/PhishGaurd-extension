@@ -4,10 +4,12 @@ Detects phishing by comparing DOM structure to known site templates
 """
 
 import re
+from threading import RLock
 import math
 from typing import Dict, Any, List, Tuple, Optional
 from collections import Counter
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+from .risk import urgent_lure
 
 
 class DOMDetector:
@@ -145,7 +147,7 @@ class DOMDetector:
                 pass
         
         # Generate fingerprint for current page
-        fingerprint = self._generate_fingerprint(dom)
+        fingerprint = self._generate_fingerprint(dom, url)
         
         # Compare against all templates
         best_match = None
@@ -158,39 +160,41 @@ class DOMDetector:
                 best_similarity = similarity
                 best_match = template_name
         
-        # Check for domain mismatch
-        is_domain_mismatch = False
-        if best_match and best_similarity > 0.5:
-            expected_domain = self.SITE_TEMPLATES[best_match]['domain']
-            if expected_domain and current_domain:
-                # Check if current domain is NOT the expected domain
-                if expected_domain not in current_domain.lower():
-                    is_domain_mismatch = True
-        
-        # Calculate risk score
-        score = 0
-        if best_similarity >= 0.7 and is_domain_mismatch:
-            # High similarity to known site but wrong domain = high risk
-            score = int(50 + (best_similarity * 50))
-        elif best_similarity >= 0.5 and is_domain_mismatch:
-            # Moderate similarity with domain mismatch
-            score = int(30 + (best_similarity * 40))
-        elif fingerprint.get('has_credential_form') and is_domain_mismatch:
-            # Has credential form on mismatched domain
-            score = 40
-        elif fingerprint.get('suspicious_form_action'):
-            # Form submits to different domain
-            score = 35
+        claimed = fingerprint.get('detected_brand')
+        brand_domains = {'paypal': ('paypal.com',), 'gmail': ('google.com',),
+                         'facebook': ('facebook.com', 'meta.com'), 'amazon': ('amazon.com',),
+                         'microsoft': ('microsoft.com', 'microsoftonline.com', 'live.com'),
+                         'apple': ('apple.com', 'icloud.com'), 'wallet': (), 'bank': ()}
+        # A generic form's closest template is not evidence of brand impersonation.
+        trusted = any(current_domain in (base, 'www.' + base, 'accounts.' + base, 'login.' + base,
+                                         'signin.' + base, 'auth.' + base) for base in brand_domains.get(claimed, ()))
+        is_domain_mismatch = bool(claimed and not trusted)
+        credential = fingerprint['has_credential_form']
+        fingerprint['brand_impersonation'] = bool(is_domain_mismatch and credential)
+        text = str(dom.get('visibleText', ''))
+        metadata = ' '.join(str(v) for i in dom.get('inputs', []) for v in i.values())
+        seed_pattern = r'\b(?:seed(?:[ _-]+(?:phrase|words))?|mnemonic|recovery[ _-]+(?:phrase|words))\b|\b(?:12|24)[ -]word'
+        secret_surface = any(i.get('tag') == 'textarea' or i.get('type') in ('textarea', 'contenteditable') for i in dom.get('inputs', []))
+        fingerprint['seed_phrase'] = bool(re.search(seed_pattern, metadata, re.I) or secret_surface and re.search(seed_pattern, text, re.I))
+        fingerprint['urgent_credentials'] = bool(fingerprint['has_password_field'] and urgent_lure(text))
+        score = 30 if credential else 0
+        if fingerprint['suspicious_form_action']:
+            score = 90 if credential else 35
+        if fingerprint['brand_impersonation'] or fingerprint['urgent_credentials']:
+            score = max(score, 90)
+        if fingerprint['seed_phrase']:
+            score = max(score, 95)
+        best_match = claimed
         
         return {
             'score': min(100, score),
-            'matched_template': best_match if best_similarity > 0.5 else None,
+            'matched_template': best_match,
             'similarity': round(best_similarity * 100, 1),
             'is_domain_mismatch': is_domain_mismatch,
             'fingerprint': fingerprint
         }
     
-    def _generate_fingerprint(self, dom: Dict) -> Dict[str, Any]:
+    def _generate_fingerprint(self, dom: Dict, url: str = '') -> Dict[str, Any]:
         """Generate structural fingerprint from DOM data."""
         fingerprint = {
             'has_credential_form': False,
@@ -221,6 +225,10 @@ class DOMDetector:
         # Check for credential-related forms
         forms = dom.get('forms', [])
         inputs = dom.get('inputs', [])
+        fingerprint['form_count'] = stats.get('forms', len(forms))
+        fingerprint['input_count'] = stats.get('inputs', len(inputs))
+        fingerprint['tag_signature']['form'] = fingerprint['form_count']
+        fingerprint['tag_signature']['input'] = fingerprint['input_count']
         
         # Analyze input fields
         for inp in inputs if isinstance(inputs, list) else []:
@@ -243,26 +251,37 @@ class DOMDetector:
         
         # Analyze form actions
         for form in forms if isinstance(forms, list) else []:
-            action = str(form.get('action', '')).lower()
+            # Support legacy top-level forms without inventing input values.
+            if form.get('hasPasswordField') is True:
+                fingerprint['has_password_field'] = True
+                fingerprint['has_credential_form'] = True
+            if form.get('isExternal') is True:
+                fingerprint['suspicious_form_action'] = True
+            action = urljoin(url, str(form.get('action', '')))
             if action and action.startswith('http'):
                 # Form submits to external URL
-                fingerprint['suspicious_form_action'] = True
+                target, source = urlparse(action), urlparse(url)
+                fingerprint['suspicious_form_action'] = fingerprint['suspicious_form_action'] or (target.scheme, target.netloc) != (source.scheme, source.netloc)
         
         # Try to detect brand from DOM content
         visible_text = dom.get('visibleText', '').lower() if dom.get('visibleText') else ''
-        title = dom.get('title', '').lower() if dom.get('title') else ''
+        title = str(dom.get('title', '')).lower() + ' ' + str(dom.get('headings', '')).lower() + ' ' + str(dom.get('assets', '')).lower()
+        title += ' ' + ' '.join(str(item.get('label', '')).lower() for item in inputs)
         
         brand_indicators = {
-            'paypal': ['paypal', 'pp'],
+            'paypal': ['paypal'],
             'gmail': ['gmail', 'google'],
             'facebook': ['facebook', 'fb', 'meta'],
             'amazon': ['amazon'],
             'bank': ['bank', 'banking', 'online banking']
+            , 'microsoft': ['microsoft'], 'apple': ['apple id', 'apple'], 'wallet': ['metamask', 'coinbase wallet', 'trust wallet']
         }
         
         for brand, keywords in brand_indicators.items():
             for keyword in keywords:
-                if keyword in visible_text or keyword in title:
+                # Primary branding, not mentions in OAuth buttons, footers or
+                # educational prose ("Sign in with Google" is not a Google clone).
+                if re.search(r'\b' + re.escape(keyword) + r'\b', title):
                     fingerprint['detected_brand'] = brand
                     break
             if fingerprint['detected_brand']:
@@ -321,7 +340,7 @@ class DOMDetector:
             # This will be factored into the score if brand matches template
             weights_sum += brand_match_weight
             for tmpl_name, tmpl_data in self.SITE_TEMPLATES.items():
-                if detected_brand == tmpl_name:
+                if detected_brand == tmpl_name and template_features is tmpl_data['features']:
                     score += brand_match_weight
                     break
         
@@ -351,13 +370,15 @@ class DOMDetector:
 
 # Singleton instance
 _dom_detector_instance = None
+_init_lock = RLock()
 
 
 def get_dom_detector() -> DOMDetector:
     """Get or create singleton DOM detector instance."""
     global _dom_detector_instance
-    if _dom_detector_instance is None:
-        _dom_detector_instance = DOMDetector()
+    with _init_lock:
+        if _dom_detector_instance is None:
+            _dom_detector_instance = DOMDetector()
     return _dom_detector_instance
 
 

@@ -10,7 +10,7 @@ from dataclasses import dataclass
 @dataclass
 class BaseConfig:
     """Base configuration"""
-    SECRET_KEY: str = os.getenv('SECRET_KEY', 'dev-secret-key')
+    SECRET_KEY: str = os.getenv('SECRET_KEY')
     DEBUG: bool = False
     TESTING: bool = False
     

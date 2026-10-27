@@ -1,0 +1,27 @@
+{
+  "url": {
+    "status": "VERIFIED",
+    "exit_code": 0,
+    "seconds": 9.34
+  },
+  "nlp": {
+    "status": "VERIFIED",
+    "exit_code": 0,
+    "seconds": 18.5
+  },
+  "dom": {
+    "status": "VERIFIED",
+    "exit_code": 0,
+    "seconds": 9.2
+  },
+  "full_app": {
+    "status": "VERIFIED",
+    "exit_code": 0,
+    "seconds": 12.33
+  },
+  "cache": {
+    "status": "VERIFIED",
+    "exit_code": 0,
+    "seconds": 12.55
+  }
+}

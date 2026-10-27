@@ -1,0 +1,214 @@
+{
+  "/health": {
+    "service": "phishguard-api",
+    "status": "healthy"
+  },
+  "/api/status": {
+    "analysis_mode": "url_nlp_dom",
+    "cache": {
+      "evictions": 0,
+      "hits": 0,
+      "maxsize": 512,
+      "misses": 0,
+      "size": 0,
+      "ttl_seconds": 86400
+    },
+    "capabilities": {
+      "dom_analysis": true,
+      "ml_inference": true,
+      "nlp_analysis": true,
+      "url_analysis": true
+    },
+    "model_loaded": true,
+    "model_version": "ac4e7f4009274776",
+    "models": {
+      "nlp": "loaded",
+      "url": "loaded"
+    },
+    "status": "operational",
+    "version": "1.1.0"
+  },
+  "/api/info": {
+    "description": "Real-time phishing detection API",
+    "endpoints": {
+      "GET /api/info": "Get API information",
+      "GET /api/status": "Get API status",
+      "GET /health": "Health check",
+      "POST /api/analyze": "Analyze URL, text, and DOM",
+      "POST /api/batch": "Batch analyze multiple URLs"
+    },
+    "name": "PhishGuard API",
+    "version": "1.0.0"
+  },
+  "analysis": {
+    "analysis_stage": "full",
+    "breakdown": {
+      "dom": 93,
+      "nlp": 76,
+      "url": 100
+    },
+    "cached": false,
+    "confidence": null,
+    "degraded": false,
+    "detectors": {
+      "dom": {
+        "source": "similarity",
+        "status": "ok"
+      },
+      "nlp": {
+        "source": "model",
+        "status": "ok"
+      },
+      "url": {
+        "source": "model",
+        "status": "ok"
+      }
+    },
+    "dom_risk": 93,
+    "errors": [],
+    "explanation": "Site uses insecure HTTP connection",
+    "explanations": [
+      {
+        "category": "url",
+        "message": "Site uses insecure HTTP connection",
+        "type": "warning"
+      },
+      {
+        "category": "url",
+        "message": "Uses high-risk domain extension (.xyz)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "URL model and URL indicators produced risk score 100/100",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP Model: Suspicious context: 'Confirm your identity...' (+1.00)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP Model: Suspicious context: 'Your account will be closed within 24 hours...' (+0.96)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP Model: Suspicious context: 'Enter your password...' (+0.88)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP Model: Suspicious context: 'Urgent...' (+0.82)",
+        "type": "danger"
+      },
+      {
+        "category": "content",
+        "message": "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+        "type": "warning"
+      },
+      {
+        "category": "content",
+        "message": "Page requests sensitive info: password",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "NLP model and text indicators produced risk score 76/100",
+        "type": "danger"
+      },
+      {
+        "category": "dom",
+        "message": "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+        "type": "danger"
+      },
+      {
+        "category": "dom",
+        "message": "Login form detected on suspicious domain",
+        "type": "warning"
+      },
+      {
+        "category": "ml",
+        "message": "ML Model: Deep URL path structure (+3.72)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "ML Model: Many path segments (+1.65)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "ML Model: Long query string (+0.83)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "ML Model: Deep URL path (+0.42)",
+        "type": "danger"
+      },
+      {
+        "category": "ml",
+        "message": "ML Model: High ratio of special characters (+0.35)",
+        "type": "danger"
+      }
+    ],
+    "features": {
+      "hostname": "verify-paypal-account.xyz",
+      "protocol": "http:",
+      "riskFactors": [
+        "insecure_http",
+        "suspicious_tld"
+      ],
+      "safeFactors": []
+    },
+    "final_score": 90,
+    "form_keywords": [
+      "password"
+    ],
+    "is_phishing": true,
+    "level": "dangerous",
+    "model_version": "ac4e7f4009274776",
+    "nlp_risk": 76,
+    "policy_version": "phase1-v1",
+    "reasons": [
+      "Site uses insecure HTTP connection",
+      "Uses high-risk domain extension (.xyz)",
+      "URL model and URL indicators produced risk score 100/100",
+      "NLP Model: Suspicious context: 'Confirm your identity...' (+1.00)",
+      "NLP Model: Suspicious context: 'Verify your account immediately...' (+1.00)",
+      "NLP Model: Suspicious context: 'Your account will be closed within 24 hours...' (+0.96)",
+      "NLP Model: Suspicious context: 'Enter your password...' (+0.88)",
+      "NLP Model: Suspicious context: 'Urgent...' (+0.82)",
+      "Found 5 suspicious phrase(s): urgent, immediately, within 24 hours",
+      "Page requests sensitive info: password",
+      "NLP model and text indicators produced risk score 76/100",
+      "Page structure matches PAYPAL (86.6% similar) but domain is different!",
+      "Login form detected on suspicious domain",
+      "ML Model: Deep URL path structure (+3.72)",
+      "ML Model: Many path segments (+1.65)",
+      "ML Model: Long query string (+0.83)",
+      "ML Model: Deep URL path (+0.42)",
+      "ML Model: High ratio of special characters (+0.35)"
+    ],
+    "response_time_ms": 280,
+    "risk_level": "dangerous",
+    "risk_score": 90,
+    "should_block": true,
+    "suspicious_phrases": [
+      "urgent",
+      "immediately",
+      "within 24 hours",
+      "verify your account",
+      "confirm your identity"
+    ],
+    "url": "http://verify-paypal-account.xyz/login",
+    "url_risk": 100
+  }
+}
